@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=My Product
+Comment=A rainy75 application
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/rainy75 %u
+Terminal=false
+Type=Application
+Icon=rainy75
+Categories=Utility;
+StartupWMClass=rainy75
+
+ 

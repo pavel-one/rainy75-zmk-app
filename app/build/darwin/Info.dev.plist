@@ -1,0 +1,38 @@
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundlePackageType</key>
+            <string>APPL</string>
+        <key>CFBundleName</key>
+            <string>Rainy75</string>
+        <key>CFBundleExecutable</key>
+            <string>rainy75</string>
+        <key>CFBundleIdentifier</key>
+            <string>one.pavel.rainy75</string>
+        <key>CFBundleVersion</key>
+            <string>0.1.0</string>
+        <key>CFBundleGetInfoString</key>
+            <string>Панель управления Rainy75</string>
+        <key>CFBundleShortVersionString</key>
+            <string>0.1.0</string>
+        <key>CFBundleIconFile</key>
+            <string>icons</string>
+        <key>CFBundleIconName</key>
+            <string>appicon</string>
+        <key>LSMinimumSystemVersion</key>
+            <string>12.0.0</string>
+        <key>NSBluetoothAlwaysUsageDescription</key>
+            <string>Rainy75 управляет подсветкой и режимом клавиатуры по Bluetooth.</string>
+        <key>NSAudioCaptureUsageDescription</key>
+            <string>Rainy75 слушает звук системы, чтобы показать визуализатор на подсветке клавиатуры.</string>
+        <key>NSHighResolutionCapable</key>
+            <string>true</string>
+        <key>NSHumanReadableCopyright</key>
+            <string>© 2026, Pavel Zarubin</string>
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsLocalNetworking</key>
+            <true/>
+        </dict>
+    </dict>
+</plist>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Встраивается в бинарник (infoplist_darwin.go): без него macOS не даст
+     запущенному не из .app приложению доступ к Bluetooth и звуку системы. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>one.pavel.rainy75</string>
+    <key>CFBundleName</key>
+    <string>Rainy75</string>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+        <string>Rainy75 управляет подсветкой и режимом клавиатуры по Bluetooth.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+        <string>Rainy75 слушает звук системы, чтобы показать визуализатор на подсветке клавиатуры.</string>
+</dict>
+</plist>
