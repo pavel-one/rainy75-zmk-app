@@ -5,11 +5,11 @@
 	"info": {
 		"0409": {
 			"ProductVersion": "0.1.0",
-			"CompanyName": "My Company",
-			"FileDescription": "A rainy75 application",
-			"LegalCopyright": "© 2026, My Company",
-			"ProductName": "My Product",
-			"Comments": "This is a comment"
+			"CompanyName": "Pavel Zarubin",
+			"FileDescription": "Панель управления Rainy75",
+			"LegalCopyright": "© 2026, Pavel Zarubin",
+			"ProductName": "Rainy75",
+			"Comments": "https://github.com/pavel-one/rainy75-zmk-app"
 		}
 	}
 }
