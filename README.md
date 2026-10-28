@@ -192,7 +192,14 @@ wails3 build    # binary in app/bin
 go test ./internal/... .
 ```
 
-Releases build themselves: push an annotated `vX.Y.Z` tag and GitHub Actions builds the app for macOS, Windows and Linux, stamps the version and uploads the archives to Releases. The tag annotation becomes the release notes.
+Releases build themselves: push an annotated `vX.Y.Z` tag and GitHub Actions builds the app for macOS, Windows and Linux, stamps the version and uploads the archives to Releases. The tag annotation becomes the release notes:
+
+```bash
+git tag -a v0.3.0 --cleanup=whitespace -F notes.md
+git push origin v0.3.0
+```
+
+`--cleanup=whitespace` keeps Markdown headings — by default git drops lines starting with `#`.
 
 ## Structure
 
