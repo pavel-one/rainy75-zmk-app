@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Rainy75: тесты" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="Rainy75" />
+    <working_directory value="$PROJECT_DIR$/app" />
+    <root_directory value="$PROJECT_DIR$/app" />
+    <kind value="DIRECTORY" />
+    <package value="rainy75" />
+    <directory value="$PROJECT_DIR$/app/internal" />
+    <filePath value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <method v="2" />
+  </configuration>
+</component>
