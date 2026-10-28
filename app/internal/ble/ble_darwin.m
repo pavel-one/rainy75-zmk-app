@@ -222,6 +222,18 @@ int rb_write(const void *data, int len) {
     return rc;
 }
 
+int rb_max_write(void) {
+    RBLink *l = link_;
+    if (!l) return 0;
+    __block int n = 0;
+    dispatch_sync(l.queue, ^{
+        if (l.peripheral && l.peripheral.state == CBPeripheralStateConnected) {
+            n = (int)[l.peripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
+        }
+    });
+    return n;
+}
+
 void rb_disconnect(void) {
     RBLink *l = link_;
     if (!l) return;

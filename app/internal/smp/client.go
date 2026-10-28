@@ -111,6 +111,15 @@ func NewRawClient(p Port) *Client {
 
 func (c *Client) Close() error { return c.p.Close() }
 
+// MaxPacket — самый длинный пакет, который уходит одной записью транспорта;
+// 0 — без ограничения (последовательный порт).
+func (c *Client) MaxPacket() int {
+	if p, ok := c.p.(interface{ MaxWrite() int }); ok {
+		return p.MaxWrite()
+	}
+	return 0
+}
+
 // Call отправляет запрос (req — CBOR-карта или nil) и раскладывает ответ в resp.
 func (c *Client) Call(op byte, group uint16, id byte, req, resp any) error {
 	return c.CallTimeout(c.Timeout, op, group, id, req, resp)

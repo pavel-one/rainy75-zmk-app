@@ -97,6 +97,11 @@ func (p *Port) Read(b []byte) (int, error) {
 	return n, nil
 }
 
+// MaxWrite — сколько байт помещается в одну запись. Пакет длиннее прошивка
+// собирает из частей, и под потоком кадров эта сборка сбивается — поэтому
+// частые команды стоит укладывать в одну запись.
+func (p *Port) MaxWrite() int { return int(C.rb_max_write()) }
+
 func (p *Port) SetReadTimeout(t time.Duration) error {
 	p.timeout = t
 	return nil

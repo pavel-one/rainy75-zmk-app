@@ -19,4 +19,5 @@ func Open(string, time.Duration) (*Port, error) {
 func (*Port) Write([]byte) (int, error)          { return 0, i18n.Error("не поддерживается") }
 func (*Port) Read([]byte) (int, error)           { return 0, i18n.Error("не поддерживается") }
 func (*Port) SetReadTimeout(time.Duration) error { return nil }
+func (*Port) MaxWrite() int                      { return 0 }
 func (*Port) Close() error                       { return nil }

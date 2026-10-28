@@ -9,5 +9,8 @@ const char *rb_error(int code);
 // Записать SMP-пакет (делится на части по MTU). 0 — успех.
 int rb_write(const void *data, int len);
 
+// Сколько байт уходит одной записью без ответа; 0 — нет связи.
+int rb_max_write(void);
+
 void rb_disconnect(void);
 int rb_connected(void);

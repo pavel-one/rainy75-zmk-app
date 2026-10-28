@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"rainy75/internal/i18n"
+	"sync"
 	"time"
 
 	"rainy75/internal/smp"
@@ -39,9 +40,28 @@ type Caller interface {
 	CallTimeout(timeout time.Duration, op byte, group uint16, id byte, req, resp any) error
 }
 
-type Keyboard struct{ c Caller }
+type Keyboard struct {
+	c Caller
+
+	mu    sync.Mutex
+	shown []Color // кадр на клавиатуре после покадровой отправки; nil — неизвестен
+}
 
 func New(c Caller) *Keyboard { return &Keyboard{c: c} }
+
+// maxPacket — предел длины пакета у транспорта (см. smp.Client.MaxPacket).
+func (k *Keyboard) maxPacket() int {
+	if c, ok := k.c.(interface{ MaxPacket() int }); ok {
+		return c.MaxPacket()
+	}
+	return 0
+}
+
+func (k *Keyboard) forget() {
+	k.mu.Lock()
+	k.shown = nil
+	k.mu.Unlock()
+}
 
 type Info struct {
 	Keys    int  `cbor:"n" json:"keys"`
@@ -52,12 +72,17 @@ type Info struct {
 func (k *Keyboard) Info() (Info, error) {
 	var i Info
 	err := k.c.Call(smp.OpRead, groupRGB, cmdInfo, nil, &i)
+	if err == nil && !i.Host {
+		// Прошивка вышла из режима кадров: следующий «set» начнёт с чёрного.
+		k.forget()
+	}
 	return i, err
 }
 
 type Color struct{ R, G, B uint8 }
 
 func (k *Keyboard) Fill(c Color) error {
+	k.forget()
 	return k.c.Call(smp.OpWrite, groupRGB, cmdFill, map[string]any{"r": c.R, "g": c.G, "b": c.B}, nil)
 }
 
@@ -74,6 +99,7 @@ func (k *Keyboard) SetKeys(colors map[int]Color) error {
 	if len(px) == 0 {
 		return nil
 	}
+	k.forget()
 	return k.c.Call(smp.OpWrite, groupRGB, cmdSet, map[string]any{"px": px}, nil)
 }
 
@@ -81,6 +107,10 @@ func (k *Keyboard) Frame(frame []Color) error {
 	if len(frame) != Positions {
 		return i18n.Errorf("в кадре должно быть %d цветов, а не %d", Positions, len(frame))
 	}
+	if limit := k.maxPacket(); limit > 0 && limit < framePacket {
+		return k.frameBySet(frame, limit)
+	}
+	k.forget()
 	rgb := make([]byte, 0, 3*Positions)
 	for _, c := range frame {
 		rgb = append(rgb, c.R, c.G, c.B)
@@ -88,8 +118,55 @@ func (k *Keyboard) Frame(frame []Color) error {
 	return k.c.Call(smp.OpWrite, groupRGB, cmdFrame, map[string]any{"rgb": rgb}, nil)
 }
 
+// Длины пакетов SMP: заголовок 8 байт + CBOR {"rgb": bstr(249)} или {"px": bstr(4n)}.
+const (
+	framePacket = 8 + 1 + 4 + 2 + 3*Positions
+	setOverhead = 8 + 1 + 3 + 2
+)
+
+// frameBySet шлёт кадр командами «set», каждая — в одну запись транспорта,
+// и только клавиши, изменившиеся с прошлого кадра. По Bluetooth кадр одной
+// командой не помещается в запись, а сборку частей прошивка под потоком
+// кадров теряет и надолго перестаёт отвечать.
+func (k *Keyboard) frameBySet(frame []Color, limit int) error {
+	perPacket := min(Positions, (limit-setOverhead)/4)
+	if perPacket < 1 {
+		return i18n.Errorf("слишком короткая запись Bluetooth: %d байт", limit)
+	}
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	px := make([]byte, 0, 4*perPacket)
+	send := func() error {
+		if len(px) == 0 {
+			return nil
+		}
+		err := k.c.Call(smp.OpWrite, groupRGB, cmdSet, map[string]any{"px": px}, nil)
+		px = px[:0]
+		return err
+	}
+	for pos, c := range frame {
+		if k.shown != nil && k.shown[pos] == c {
+			continue
+		}
+		px = append(px, byte(pos), c.R, c.G, c.B)
+		if len(px) == cap(px) {
+			if err := send(); err != nil {
+				k.shown = nil
+				return err
+			}
+		}
+	}
+	if err := send(); err != nil {
+		k.shown = nil
+		return err
+	}
+	k.shown = append(k.shown[:0], frame...)
+	return nil
+}
+
 // Clear возвращает эффекты прошивки (выход из режима управления с компьютера).
 func (k *Keyboard) Clear() error {
+	k.forget()
 	return k.c.Call(smp.OpWrite, groupRGB, cmdClear, nil, nil)
 }
 
