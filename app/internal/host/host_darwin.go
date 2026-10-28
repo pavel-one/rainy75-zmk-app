@@ -11,6 +11,7 @@ package host
 import "C"
 
 import (
+	"os/exec"
 	"rainy75/internal/i18n"
 	"sync"
 	"unsafe"
@@ -41,8 +42,18 @@ func rhGoKey(vk C.int) {
 
 func KeyTapAllowed() bool { return C.rh_keytap_allowed() != 0 }
 
-// RequestKeyTap просит разрешение (macOS покажет запрос или откроет Настройки).
-func RequestKeyTap() bool { return C.rh_keytap_request() != 0 }
+// inputMonitoringPane — раздел «Мониторинг ввода» в Системных настройках.
+const inputMonitoringPane = "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"
+
+// RequestKeyTap просит разрешение. Свой запрос macOS показывает только один
+// раз, поэтому без разрешения сразу открываем нужный раздел Настроек.
+func RequestKeyTap() bool {
+	if C.rh_keytap_request() != 0 {
+		return true
+	}
+	_ = exec.Command("open", inputMonitoringPane).Start()
+	return false
+}
 
 // ErrNoInputMonitoring — нет разрешения «Мониторинг ввода».
 var ErrNoInputMonitoring = i18n.Error("нет разрешения «Мониторинг ввода»: Системные настройки → Конфиденциальность и безопасность → Мониторинг ввода")
