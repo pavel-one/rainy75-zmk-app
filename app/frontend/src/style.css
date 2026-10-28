@@ -433,7 +433,7 @@ code { font: 12px ui-monospace, Menlo, monospace; padding: 1px 6px; border-radiu
 
 .side-toggles { margin-top: auto; display: grid; gap: 4px; padding: 0 8px; }
 .side-toggles .check { margin-top: 6px; }
-.side-toggles + .device-card { margin-top: 12px; }
+.side-toggles ~ .device-card { margin-top: 12px; }
 
 .anim-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; margin-top: 18px; align-items: center; }
 .anim-col { display: flex; align-items: center; gap: 12px; }
@@ -473,3 +473,24 @@ code.cmd { display: block; margin: 10px 0 14px; padding: 10px 12px; font-size: 1
 
 .mini-board-card { padding: 16px 18px; }
 .mini-board-card .bkey { font-size: 0; }
+
+.side-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.side-meta .seg button { padding: 4px 10px; }
+.link-btn {
+    background: none; border: 0; padding: 4px 2px; cursor: pointer; font: inherit; font-size: 12px;
+    color: var(--muted); font-family: ui-monospace, Menlo, monospace; transition: color .2s;
+}
+.link-btn:hover { color: var(--text); }
+.link-btn.spin { opacity: .5; pointer-events: none; }
+.update-card {
+    margin-top: 12px; padding: 14px; border-radius: var(--radius); font-size: 13px;
+    background: linear-gradient(135deg, rgba(124, 140, 255, 0.16), rgba(179, 107, 255, 0.16));
+    border: 1px solid rgba(124, 140, 255, 0.35); animation: fade .35s ease;
+}
+.update-card[hidden] { display: none; }
+.update-title { font-weight: 600; margin-bottom: 10px; }
+.update-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.update-bar { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); margin-bottom: 10px; overflow: hidden; }
+.update-bar[hidden] { display: none; }
+.update-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .2s; }
+.update-actions .small-btn { margin-left: 0; }

@@ -3,6 +3,7 @@
 // data-seg="секция.поле" — сегменты-кнопки с data-v; data-out — подпись значения.
 import {KeyboardService as KB} from "../bindings/rainy75";
 import type {Settings} from "../bindings/rainy75/internal/settings/models";
+import {getLang, locale, onLang} from "./i18n";
 
 type Ctx = {toast(message: string, error?: boolean): void; errText(e: unknown): string};
 
@@ -26,8 +27,8 @@ function set(path: string, value: unknown) {
 }
 
 const fmt: Record<string, (v: number) => string> = {
-    ms: (v) => `${(v / 1000).toLocaleString("ru-RU", {maximumFractionDigits: 2})} с`,
-    x: (v) => `${v.toLocaleString("ru-RU")}×`,
+    ms: (v) => `${(v / 1000).toLocaleString(locale(), {maximumFractionDigits: 2})} ${getLang() === "en" ? "s" : "с"}`,
+    x: (v) => `${v.toLocaleString(locale())}×`,
 };
 
 function paintRange(input: HTMLInputElement) {
@@ -89,6 +90,8 @@ export const settings = () => cfg;
 export function onSettings(f: (s: Settings) => void) {
     listeners.push(f);
 }
+
+onLang(() => render());
 
 export async function initSettings(c: Ctx) {
     ctx = c;

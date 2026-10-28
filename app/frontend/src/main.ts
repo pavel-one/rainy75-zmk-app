@@ -1,5 +1,5 @@
 import "./style.css";
-import {Events} from "@wailsio/runtime";
+import {Browser, Events} from "@wailsio/runtime";
 import {KeyboardService as KB} from "../bindings/rainy75";
 import type {AnimationParams, DeviceStatus, FirmwareFile, KeyColor, LightingState, Progress} from "../bindings/rainy75";
 import type {Effect} from "../bindings/rainy75/internal/effects/models";
@@ -9,12 +9,19 @@ import type {PomodoroState} from "../bindings/rainy75/internal/lights/models";
 import type {Status as BatteryStatus} from "../bindings/rainy75/internal/battery/models";
 import {type Board, keyCode, paintLabels, renderBoard} from "./board";
 import {initSettings, onSettings, settings, update} from "./settings";
+import {getLang, type Lang, onLang, setLang, t, translateDOM} from "./i18n";
+import type {UpdateInfo} from "../bindings/rainy75";
+
+type UpdateProgress = {done: number; total: number};
+
+// Запоминаем исходную разметку до того, как код начнёт её менять.
+translateDOM();
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 const $$ = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll(sel)) as T[];
 const root = document.documentElement;
 
-const errText = (e: unknown) => (e instanceof Error ? e.message : String(e ?? "")) || "Неизвестная ошибка";
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e ?? "")) || t("Неизвестная ошибка");
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]!);
 
 function toast(message: string, error = false) {
@@ -79,25 +86,25 @@ function renderDevice(st: DeviceStatus) {
     const was = device;
     device = st;
     $("#dev-dot").classList.toggle("on", st.connected);
-    $("#dev-title").textContent = st.connected ? "Rainy75 подключена" : "Не подключена";
+    $("#dev-title").textContent = st.connected ? t("Rainy75 подключена") : t("Не подключена");
     const channel = st.connection === "bluetooth" ? "Bluetooth · SMP" : "USB-C · SMP";
     $("#dev-rows").innerHTML = st.connected
-        ? `<div><span>Канал</span><b><span class="badge">${channel}</span></b></div>
-           <div><span>Прошивка</span><b>${esc(st.firmware)}</b></div>
-           <div><span>Режим</span><b>${st.windows ? "Windows" : "macOS"}</b></div>
-           <div><span>Подсветка</span><b>${st.host ? "с компьютера" : "эффекты прошивки"}</b></div>
-           ${st.connection === "usb" ? `<div><span>Порт</span><b class="port">${esc(st.port.replace("/dev/", ""))}</b></div>` : ""}`
+        ? `<div><span>${t("Канал")}</span><b><span class="badge">${channel}</span></b></div>
+           <div><span>${t("Прошивка")}</span><b>${esc(st.firmware)}</b></div>
+           <div><span>${t("Режим")}</span><b>${st.windows ? "Windows" : "macOS"}</b></div>
+           <div><span>${t("Подсветка")}</span><b>${st.host ? t("с компьютера") : t("эффекты прошивки")}</b></div>
+           ${st.connection === "usb" ? `<div><span>${t("Порт")}</span><b class="port">${esc(st.port.replace("/dev/", ""))}</b></div>` : ""}`
         : `<div><span>${esc(st.message)}</span></div>`;
 
     for (const block of $$("[data-needs]")) {
         block.classList.toggle("hide", !st.connected);
         const empty = block.parentElement!.querySelector(`[data-empty]`) as HTMLElement;
         empty.classList.toggle("show", !st.connected);
-        if (!st.connected) empty.innerHTML = `${plugIcon}<b>Клавиатура не найдена</b><span>${esc(st.message)}</span>`;
+        if (!st.connected) empty.innerHTML = `${plugIcon}<b>${t("Клавиатура не найдена")}</b><span>${esc(st.message)}</span>`;
     }
     osSwitch.disabled = !st.connected;
     renderOSMode(st.windows ? "windows" : "mac");
-    $("#host-badge").textContent = st.connected ? (st.host ? "цвета с компьютера" : "работают эффекты прошивки") : "";
+    $("#host-badge").textContent = st.connected ? (st.host ? t("цвета с компьютера") : t("работают эффекты прошивки")) : "";
     $("#host-badge").classList.toggle("on", st.host);
     if (was.windows !== st.windows || was.connected !== st.connected) refreshTesterLabels();
     renderFlashButton();
@@ -121,7 +128,7 @@ async function setOSMode(target: string) {
     try {
         const mode = await KB.SetOSMode(target);
         renderOSMode(mode);
-        toast(mode === "mac" ? "macOS: ⌥ Option и ⌘ Command, F-ряд — функции Mac" : "Windows: Win и Alt, обычный F-ряд");
+        toast(mode === "mac" ? t("macOS: ⌥ Option и ⌘ Command, F-ряд — функции Mac") : t("Windows: Win и Alt, обычный F-ряд"));
     } catch (e) {
         renderOSMode(prev);
         toast(errText(e), true);
@@ -243,6 +250,7 @@ const presets: [string, string][] = [
 for (const [name, hex] of presets) {
     const b = document.createElement("button");
     b.className = "preset";
+    b.dataset.name = name;
     b.title = name;
     b.style.background = hex;
     b.addEventListener("click", () => setColor(hex));
@@ -263,12 +271,12 @@ async function fillAll(hex: string, message: string) {
     }
 }
 
-$("#fill-all").addEventListener("click", () => fillAll(color, "Клавиатура залита цветом"));
-$("#clear-canvas").addEventListener("click", () => fillAll(BLACK, "Подсветка погашена"));
+$("#fill-all").addEventListener("click", () => fillAll(color, t("Клавиатура залита цветом")));
+$("#clear-canvas").addEventListener("click", () => fillAll(BLACK, t("Подсветка погашена")));
 $("#restore-effects").addEventListener("click", async () => {
     try {
         await KB.RestoreEffects();
-        toast("Работают эффекты прошивки");
+        toast(t("Работают эффекты прошивки"));
     } catch (e) {
         toast(errText(e), true);
     }
@@ -292,11 +300,11 @@ function renderLighting(st: LightingState) {
     $$(".effect").forEach((el) => el.classList.toggle("active", el.dataset.key === running));
     $("#anim-stop").hidden = !running;
     const name = effects.find((e) => e.key === running)?.name;
-    $("#anim-state").textContent = running ? `идёт: ${name ?? running}` : "";
+    $("#anim-state").textContent = running ? t("идёт: {name}", {name: name ?? running}) : "";
     const viz = st.base === "visualizer";
     const btn = $("#viz-toggle");
     btn.classList.toggle("ghost", viz);
-    btn.lastChild!.textContent = viz ? " Выключить" : " Включить";
+    btn.lastChild!.textContent = " " + (viz ? t("Выключить") : t("Включить"));
     if (paintBoard) paintBoardKeys();
     renderAnimControls();
 }
@@ -347,7 +355,7 @@ const retune = debounce(() => {
 function buildEffects() {
     const box = $("#effects");
     box.innerHTML = "";
-    for (const [title, test] of [["Свои цвета", (e: Effect) => e.colors === 0], ["Выбранными цветами", (e: Effect) => e.colors > 0]] as const) {
+    for (const [title, test] of [[t("Свои цвета"), (e: Effect) => e.colors === 0], [t("Выбранными цветами"), (e: Effect) => e.colors > 0]] as const) {
         const group = effects.filter(test);
         if (!group.length) continue;
         const h = document.createElement("div");
@@ -410,7 +418,7 @@ onSettings(() => {
 
 $("#perm-input-btn").addEventListener("click", async () => {
     await KB.RequestInputMonitoring();
-    toast("Включите Rainy75 в «Мониторинге ввода» и перезапустите приложение");
+    toast(t("Включите Rainy75 в «Мониторинге ввода» и перезапустите приложение"));
 });
 
 for (const [id, mode] of [["#ind-test-mac", "mac"], ["#ind-test-win", "windows"]] as const) {
@@ -450,9 +458,9 @@ function renderPomodoro() {
     if (pomo.phase === "idle") left = (settings()?.pomodoro.work ?? 25) * 60;
     $("#pomo-time").textContent = `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
     $("#pomo-phase").textContent =
-        pomo.phase === "idle" ? "не запущен" : `${pomo.phase === "work" ? "работа" : "отдых"}${pomo.running ? "" : " · пауза"}`;
+        pomo.phase === "idle" ? t("не запущен") : `${pomo.phase === "work" ? t("работа") : t("отдых")}${pomo.running ? "" : t(" · пауза")}`;
     $(".pomo-card").dataset.phase = pomo.phase;
-    $("#pomo-start").textContent = pomo.running ? "Пауза" : pomo.phase === "idle" ? "Старт" : "Продолжить";
+    $("#pomo-start").textContent = pomo.running ? t("Пауза") : pomo.phase === "idle" ? t("Старт") : t("Продолжить");
 }
 
 function setPomodoro(st: PomodoroState) {
@@ -464,7 +472,7 @@ function setPomodoro(st: PomodoroState) {
 Events.On("pomodoro:state", (ev) => {
     const st = ev.data as PomodoroState;
     setPomodoro(st);
-    if (st.phase !== "idle" && st.running && st.left === st.total) toast(st.phase === "work" ? "Помодоро: за работу" : "Помодоро: перерыв");
+    if (st.phase !== "idle" && st.running && st.left === st.total) toast(st.phase === "work" ? t("Помодоро: за работу") : t("Помодоро: перерыв"));
 });
 setInterval(() => pomo.running && renderPomodoro(), 1000);
 onSettings(renderPomodoro);
@@ -478,7 +486,7 @@ autostartBox.addEventListener("change", async () => {
     try {
         const on = await KB.SetAutostart(autostartBox.checked);
         autostartBox.checked = on;
-        toast(on ? "Rainy75 будет запускаться при входе — сразу в трей" : "Автозапуск выключен");
+        toast(on ? t("Rainy75 будет запускаться при входе — сразу в трей") : t("Автозапуск выключен"));
     } catch (e) {
         autostartBox.checked = !autostartBox.checked;
         toast(errText(e), true);
@@ -498,9 +506,9 @@ function refreshTesterLabels() {
     paintLabels(paintBoard, layout, testerMac());
     $("#ts-note").textContent =
         (testerMac()
-            ? "Схема в режиме macOS: F-ряд шлёт функции Mac, их браузер не видит — проверяйте его с Fn. "
-            : "Схема в режиме Windows. ") +
-        "Fn и системные сочетания (⌘Tab и т. п.) перехватывает ОС, в тестере их не видно.";
+            ? t("Схема в режиме macOS: F-ряд шлёт функции Mac, их браузер не видит — проверяйте его с Fn. ")
+            : t("Схема в режиме Windows. ")) +
+        t("Fn и системные сочетания (⌘Tab и т. п.) перехватывает ОС, в тестере их не видно.");
     renderTesterStats();
 }
 
@@ -511,7 +519,7 @@ function positionsOf(code: string) {
 function renderTesterStats() {
     const total = (layout?.keys ?? []).filter((k) => keyCode(k, testerMac())).length;
     $("#ts-count").textContent = String(tsTested.size);
-    $("#ts-total").textContent = `из ${total} клавиш`;
+    $("#ts-total").textContent = t("из {n} клавиш", {n: total});
     $("#ts-bar").style.width = `${total ? (tsTested.size / total) * 100 : 0}%`;
 }
 
@@ -527,7 +535,7 @@ function onKey(e: KeyboardEvent, down: boolean) {
         }
     }
     if (!down || e.repeat) return;
-    const where = pos.length ? `позиция ${pos[0]}` : "нет на схеме";
+    const where = pos.length ? t("позиция {n}", {n: pos[0]}) : t("нет на схеме");
     tsLog.unshift(`<div><kbd>${esc(e.code || e.key)}</kbd><span>${esc(e.key)}</span><span class="muted">${where}</span></div>`);
     tsLog = tsLog.slice(0, 12);
     $("#ts-log").innerHTML = tsLog.join("");
@@ -538,7 +546,7 @@ function resetTester() {
     tsTested.clear();
     tsLog = [];
     tsBoard.keys.forEach((b) => b.classList.remove("tested", "pressed"));
-    $("#ts-log").innerHTML = `<div class="muted small">Нажмите любую клавишу…</div>`;
+    $("#ts-log").innerHTML = `<div class="muted small">${t("Нажмите любую клавишу…")}</div>`;
     renderTesterStats();
 }
 
@@ -556,8 +564,8 @@ function renderBattery(st: BatteryStatus) {
     root.style.setProperty("--g1", g1);
     root.style.setProperty("--g2", g2);
     $("#battery-pct").textContent = st.available ? `${pct}%` : "—";
-    $("#battery-label").textContent = st.available ? (st.charging ? "заряжается" : "заряд") : "нет данных";
-    $("#battery-state").textContent = !st.available ? "Неизвестно" : st.charging ? "⚡ Заряжается" : pct <= 20 ? "Низкий заряд" : "От батареи";
+    $("#battery-label").textContent = st.available ? (st.charging ? t("заряжается") : t("заряд")) : t("нет данных");
+    $("#battery-state").textContent = !st.available ? t("Неизвестно") : st.charging ? t("⚡ Заряжается") : pct <= 20 ? t("Низкий заряд") : t("От батареи");
     $("#battery-source").textContent = st.source || "—";
     $("#battery-note").hidden = st.available;
     $("#battery-message").textContent = st.message;
@@ -580,14 +588,14 @@ let flashing = false;
 
 function slotCard(img: Image) {
     const flags = [
-        img.active && ["работает", "ok"],
-        img.confirmed && ["подтверждена", ""],
-        img.pending && ["ждёт перезагрузки", "warn"],
-        !img.bootable && ["не загрузочная", "bad"],
+        img.active && [t("работает"), "ok"],
+        img.confirmed && [t("подтверждена"), ""],
+        img.pending && [t("ждёт перезагрузки"), "warn"],
+        !img.bootable && [t("не загрузочная"), "bad"],
     ].filter(Boolean) as [string, string][];
     return `<div class="slot ${img.active ? "active" : ""}">
         <div class="slot-num">${img.slot}</div>
-        <div><div class="muted small">Слот ${img.slot}${img.slot === 0 ? " · основной" : " · для обновления"}</div>
+        <div><div class="muted small">${t("Слот {n}", {n: img.slot})}${img.slot === 0 ? t(" · основной") : t(" · для обновления")}</div>
         <div class="fw-version">${esc(img.version || "—")}</div></div>
         <div class="slot-flags">${flags.map(([t, c]) => `<span class="flag ${c}">${t}</span>`).join("")}</div>
     </div>`;
@@ -599,9 +607,9 @@ async function loadFirmware() {
     try {
         const info = await KB.FirmwareInfo();
         const imgs = info.images ?? [];
-        $("#slots").innerHTML = imgs.length ? imgs.map(slotCard).join("") : `<div class="muted small">Прошивка не сообщила слоты.</div>`;
+        $("#slots").innerHTML = imgs.length ? imgs.map(slotCard).join("") : `<div class="muted small">${t("Прошивка не сообщила слоты.")}</div>`;
     } catch (e) {
-        $("#slots").innerHTML = `<div class="empty show">${plugIcon}<b>Нет связи с клавиатурой</b><span>${esc(errText(e))}</span></div>`;
+        $("#slots").innerHTML = `<div class="empty show">${plugIcon}<b>${t("Нет связи с клавиатурой")}</b><span>${esc(errText(e))}</span></div>`;
     } finally {
         btn.classList.remove("spin");
         renderFlashButton();
@@ -620,7 +628,7 @@ $("#fw-choose").addEventListener("click", async () => {
         const f = await KB.ChooseFirmware();
         if (!f.path) return;
         fwFile = f;
-        $("#fw-file").innerHTML = `${esc(f.name)} <span class="muted small">v${esc(f.version)} · ${(f.size / 1024).toFixed(0)} КБ</span>`;
+        $("#fw-file").innerHTML = `${esc(f.name)} <span class="muted small">v${esc(f.version)} · ${(f.size / 1024).toFixed(0)} ${t("КБ")}</span>`;
     } catch (e) {
         toast(errText(e), true);
     } finally {
@@ -630,15 +638,15 @@ $("#fw-choose").addEventListener("click", async () => {
 
 $("#fw-flash").addEventListener("click", async () => {
     if (!fwFile) return;
-    const slow = device.connection === "bluetooth" ? " По Bluetooth загрузка займёт несколько минут." : "";
-    if (!confirm(`Прошить ${fwFile.name} (v${fwFile.version})? Не отключайте клавиатуру до её перезагрузки.${slow}`)) return;
+    const slow = device.connection === "bluetooth" ? t(" По Bluetooth загрузка займёт несколько минут.") : "";
+    if (!confirm(t("Прошить {name} (v{version})? Не отключайте клавиатуру до её перезагрузки.", {name: fwFile.name, version: fwFile.version}) + slow)) return;
     flashing = true;
     renderFlashButton();
     $("#fw-progress").hidden = false;
     $("#fw-bar").style.width = "0";
     try {
         await KB.FlashFirmware(fwFile.path);
-        toast("Прошивка загружена, клавиатура перезагружается");
+        toast(t("Прошивка загружена, клавиатура перезагружается"));
         setTimeout(loadFirmware, 8000);
     } catch (e) {
         toast(errText(e), true);
@@ -656,7 +664,102 @@ Events.On("firmware:progress", (ev) => {
     $("#fw-progress").classList.toggle("error", p.stage === "error");
 });
 
+function renderLangSwitch() {
+    $$("#lang-switch button").forEach((b) => b.classList.toggle("active", b.dataset.lang === getLang()));
+}
+
+$$<HTMLButtonElement>("#lang-switch button").forEach((b) =>
+    b.addEventListener("click", () => {
+        const l = b.dataset.lang as Lang;
+        if (l === getLang()) return;
+        setLang(l);
+        update("language", l);
+    }),
+);
+
+// Приложение переключает язык, когда сохранит настройки, — тогда и
+// перезапрашиваем то, что переводит оно само.
+Events.On("language:changed", async () => {
+    effects = (await KB.Effects()) ?? [];
+    buildEffects();
+    renderLighting(lighting);
+    renderDevice(await KB.Status());
+    renderBattery(await KB.Battery());
+    if (page === "firmware") loadFirmware();
+});
+
+onLang(() => {
+    renderLangSwitch();
+    $$<HTMLElement>(".preset").forEach((b) => (b.title = t(b.dataset.name!)));
+    renderDevice(device);
+    renderLighting(lighting);
+    refreshTesterLabels();
+    if (tsBoard && !tsLog.length) resetTester();
+    renderPomodoro();
+    renderUpdate();
+});
+
+let upd: UpdateInfo | null = null;
+let updating = false;
+
+function renderUpdate() {
+    const card = $("#update-card");
+    card.hidden = !upd?.available;
+    if (!upd?.available) return;
+    $("#update-version").textContent = upd.release.version;
+    $<HTMLButtonElement>("#update-install").disabled = updating;
+}
+
+Events.On("update:available", (ev) => {
+    upd = ev.data as UpdateInfo;
+    renderUpdate();
+});
+
+Events.On("update:progress", (ev) => {
+    const p = ev.data as UpdateProgress;
+    const pct = p.total > 0 ? Math.floor((p.done / p.total) * 100) : 0;
+    $("#update-progress").hidden = false;
+    $("#update-bar").style.width = `${pct}%`;
+    $("#update-install").textContent = t("Загрузка обновления… {pct}%", {pct});
+});
+
+$("#update-check").addEventListener("click", async () => {
+    const btn = $("#update-check");
+    btn.classList.add("spin");
+    try {
+        upd = await KB.CheckUpdate();
+        renderUpdate();
+        if (!upd.available) toast(t("Установлена последняя версия"));
+    } catch (e) {
+        toast(errText(e), true);
+    } finally {
+        btn.classList.remove("spin");
+    }
+});
+
+$("#update-notes").addEventListener("click", () => upd && Browser.OpenURL(upd.release.url));
+
+$("#update-install").addEventListener("click", async () => {
+    updating = true;
+    renderUpdate();
+    try {
+        await KB.InstallUpdate();
+        toast(t("Обновление установлено — приложение перезапускается"));
+    } catch (e) {
+        toast(errText(e), true);
+        $("#update-progress").hidden = true;
+        $("#update-install").textContent = t("Обновить");
+    } finally {
+        updating = false;
+        renderUpdate();
+    }
+});
+
 async function init() {
+    const lang = (await KB.Language()) as Lang;
+    if (lang !== getLang()) setLang(lang);
+    renderLangSwitch();
+    $("#app-version").textContent = await KB.Version();
     setColor(color);
     layout = await KB.Layout();
     effects = (await KB.Effects()) ?? [];

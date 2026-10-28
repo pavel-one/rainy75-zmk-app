@@ -29,6 +29,11 @@ export const DeviceStatus = "device:status";
 export const FirmwareProgress = "firmware:progress";
 
 /**
+ * Name of the custom event "language:changed".
+ */
+export const LanguageChanged = "language:changed";
+
+/**
  * Name of the custom event "lighting:frame".
  */
 export const LightingFrame = "lighting:frame";
@@ -42,4 +47,14 @@ export const LightingState = "lighting:state";
  * Name of the custom event "pomodoro:state".
  */
 export const PomodoroState = "pomodoro:state";
+
+/**
+ * Name of the custom event "update:available".
+ */
+export const UpdateAvailable = "update:available";
+
+/**
+ * Name of the custom event "update:progress".
+ */
+export const UpdateProgress = "update:progress";
 

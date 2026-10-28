@@ -3,6 +3,7 @@ package battery
 import (
 	"context"
 	"os/exec"
+	"rainy75/internal/i18n"
 	"time"
 )
 
@@ -12,7 +13,7 @@ func readPlatform(ctx context.Context) Status {
 	out, err := exec.CommandContext(ctx, "ioreg", "-r", "-l", "-k", "BatteryPercent").Output()
 	if err != nil {
 		s := notFound()
-		s.Message = "Не удалось прочитать IORegistry: " + err.Error()
+		s.Message = i18n.Sprintf("Не удалось прочитать IORegistry: %v", err)
 		return s
 	}
 	if s, ok := parseIORegistry(string(out)); ok {

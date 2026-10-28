@@ -3,6 +3,7 @@ package lights
 import (
 	"fmt"
 	"math"
+	"rainy75/internal/i18n"
 	"strings"
 	"sync"
 	"time"
@@ -71,16 +72,16 @@ func validKeys(name string, allowed ...string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("неизвестный набор клавиш %q", name)
+	return i18n.Errorf("неизвестный набор клавиш %q", name)
 }
 
 func ParseColor(hex string) (rainy.Color, error) {
 	var r, g, b uint8
 	if len(hex) != 7 || hex[0] != '#' {
-		return rainy.Color{}, fmt.Errorf("цвет должен быть в виде #rrggbb, а не %q", hex)
+		return rainy.Color{}, i18n.Errorf("цвет должен быть в виде #rrggbb, а не %q", hex)
 	}
 	if _, err := fmt.Sscanf(hex, "#%02x%02x%02x", &r, &g, &b); err != nil {
-		return rainy.Color{}, fmt.Errorf("цвет должен быть в виде #rrggbb, а не %q", hex)
+		return rainy.Color{}, i18n.Errorf("цвет должен быть в виде #rrggbb, а не %q", hex)
 	}
 	return rainy.Color{R: r, G: g, B: b}, nil
 }
@@ -214,7 +215,7 @@ func (c ReactiveConfig) Validate() (ReactiveConfig, error) {
 	switch c.Style {
 	case "fade", "ripple", "cross", "heat":
 	default:
-		return c, fmt.Errorf("неизвестный стиль реакции %q", c.Style)
+		return c, i18n.Errorf("неизвестный стиль реакции %q", c.Style)
 	}
 	if _, err := ParseColor(c.Color); err != nil {
 		return c, err
@@ -478,10 +479,10 @@ func DefaultMeter() MeterConfig {
 
 func (c MeterConfig) Validate() (MeterConfig, error) {
 	if c.Source != "cpu" && c.Source != "volume" {
-		return c, fmt.Errorf("неизвестный источник шкалы %q", c.Source)
+		return c, i18n.Errorf("неизвестный источник шкалы %q", c.Source)
 	}
 	if c.Mode != "always" && c.Mode != "change" {
-		return c, fmt.Errorf("неизвестный режим шкалы %q", c.Mode)
+		return c, i18n.Errorf("неизвестный режим шкалы %q", c.Mode)
 	}
 	for _, h := range []string{c.Low, c.High} {
 		if _, err := ParseColor(h); err != nil {

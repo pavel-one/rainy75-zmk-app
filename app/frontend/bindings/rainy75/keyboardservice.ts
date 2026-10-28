@@ -39,6 +39,13 @@ export function Battery(): $CancellablePromise<battery$0.Status> {
     return $Call.ByID(4112075081);
 }
 
+/**
+ * CheckUpdate спрашивает GitHub о последнем релизе.
+ */
+export function CheckUpdate(): $CancellablePromise<$models.UpdateInfo> {
+    return $Call.ByID(1658434949);
+}
+
 export function ChooseFirmware(): $CancellablePromise<$models.FirmwareFile> {
     return $Call.ByID(3355240676);
 }
@@ -69,6 +76,20 @@ export function Flash(color: string, times: number): $CancellablePromise<void> {
  */
 export function FlashFirmware(path: string): $CancellablePromise<void> {
     return $Call.ByID(4025432383, path);
+}
+
+/**
+ * InstallUpdate скачивает и ставит последний релиз, затем перезапускает приложение.
+ */
+export function InstallUpdate(): $CancellablePromise<void> {
+    return $Call.ByID(3751120454);
+}
+
+/**
+ * Language возвращает язык интерфейса: выбранный или язык системы.
+ */
+export function Language(): $CancellablePromise<string> {
+    return $Call.ByID(2723897270);
 }
 
 export function Layout(): $CancellablePromise<layout$0.Layout> {
@@ -164,4 +185,8 @@ export function Status(): $CancellablePromise<$models.DeviceStatus> {
 
 export function StopAnimation(): $CancellablePromise<void> {
     return $Call.ByID(3158004498);
+}
+
+export function Version(): $CancellablePromise<string> {
+    return $Call.ByID(2280026400);
 }

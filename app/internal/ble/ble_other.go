@@ -4,7 +4,7 @@
 package ble
 
 import (
-	"errors"
+	"rainy75/internal/i18n"
 	"time"
 )
 
@@ -13,10 +13,10 @@ const Supported = false
 type Port struct{}
 
 func Open(string, time.Duration) (*Port, error) {
-	return nil, errors.New("управление по Bluetooth пока есть только на macOS")
+	return nil, i18n.Error("управление по Bluetooth пока есть только на macOS")
 }
 
-func (*Port) Write([]byte) (int, error)          { return 0, errors.New("не поддерживается") }
-func (*Port) Read([]byte) (int, error)           { return 0, errors.New("не поддерживается") }
+func (*Port) Write([]byte) (int, error)          { return 0, i18n.Error("не поддерживается") }
+func (*Port) Read([]byte) (int, error)           { return 0, i18n.Error("не поддерживается") }
 func (*Port) SetReadTimeout(time.Duration) error { return nil }
 func (*Port) Close() error                       { return nil }

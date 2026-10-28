@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"rainy75/internal/i18n"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -236,7 +237,7 @@ func (s *KeyboardService) SetFrame(frame []KeyColor) error {
 	colors := make([]rainy.Color, rainy.Positions)
 	for _, k := range frame {
 		if k.Pos < 0 || k.Pos >= rainy.Positions {
-			return fmt.Errorf("нет клавиши %d", k.Pos)
+			return i18n.Errorf("нет клавиши %d", k.Pos)
 		}
 		colors[k.Pos] = rainy.Color{R: k.R, G: k.G, B: k.B}
 	}
@@ -264,7 +265,7 @@ func (s *KeyboardService) RestoreEffects() error {
 
 func (s *KeyboardService) StartAnimation(p AnimationParams) error {
 	if !effects.Valid(p.Kind) {
-		return fmt.Errorf("неизвестная анимация %q", p.Kind)
+		return i18n.Errorf("неизвестная анимация %q", p.Kind)
 	}
 	c1, err := lights.ParseColor(p.Color)
 	if err != nil {
@@ -337,7 +338,7 @@ func (s *KeyboardService) SetSettings(c settings.Settings) (settings.Settings, e
 	}
 	if s.cfgPath != "" {
 		if err := settings.Save(s.cfgPath, c); err != nil {
-			return s.config(), fmt.Errorf("сохранение настроек: %w", err)
+			return s.config(), i18n.Errorf("сохранение настроек: %w", err)
 		}
 	}
 	s.cfgMu.Lock()
@@ -350,6 +351,10 @@ func (s *KeyboardService) SetSettings(c settings.Settings) (settings.Settings, e
 	s.lang.SetConfig(c.Lang)
 	s.meter.SetConfig(c.Meter)
 	s.pomodoro.SetConfig(c.Pomodoro)
+	if lang := i18n.Resolve(c.Language); lang != i18n.Lang() {
+		i18n.Set(lang)
+		emit(eventLanguage, lang)
+	}
 	go s.syncKeyTap(c.Reactive.Enabled)
 	if base, _ := s.engine.State(); base == lights.BaseVisualizer && c.Visualizer != old.Visualizer {
 		s.engine.SetSource(lights.Visualizer(c.Visualizer, s.readSpectrum))
@@ -358,7 +363,7 @@ func (s *KeyboardService) SetSettings(c settings.Settings) (settings.Settings, e
 	if old.Bluetooth && !c.Bluetooth {
 		s.mu.Lock()
 		if s.status.Connection == "bluetooth" {
-			s.disconnectLocked("Управление по Bluetooth выключено")
+			s.disconnectLocked(i18n.T("Управление по Bluetooth выключено"))
 		}
 		st := s.status
 		s.mu.Unlock()

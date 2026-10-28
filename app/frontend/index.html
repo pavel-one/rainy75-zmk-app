@@ -58,6 +58,22 @@
             <label class="check" title="Запуск при входе в систему — сразу в трей, без окна. Закрытое окно тоже прячется в трей.">
                 <input type="checkbox" id="autostart"/><i></i>Запускать при входе
             </label>
+            <div class="side-meta">
+                <div class="seg small" id="lang-switch" title="Язык интерфейса">
+                    <button data-lang="ru">RU</button>
+                    <button data-lang="en">EN</button>
+                </div>
+                <button class="link-btn" id="update-check" title="Проверить обновления">v<span id="app-version"></span></button>
+            </div>
+        </div>
+
+        <div class="update-card" id="update-card" hidden>
+            <div class="update-title">Доступна версия <b id="update-version"></b></div>
+            <div class="update-bar" id="update-progress" hidden><i id="update-bar"></i></div>
+            <div class="update-actions">
+                <button class="btn small-btn" id="update-install">Обновить</button>
+                <button class="btn ghost small-btn" id="update-notes">Что нового</button>
+            </div>
         </div>
 
         <div class="device-card" id="device-card">

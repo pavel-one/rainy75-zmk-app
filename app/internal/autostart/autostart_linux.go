@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"rainy75/internal/i18n"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func enable(exe string) error {
 		return err
 	}
 	quoted := `"` + strings.ReplaceAll(exe, `"`, `\"`) + `"`
-	entry := "[Desktop Entry]\nType=Application\nName=Rainy75\nComment=Панель управления Rainy75\n" +
+	entry := "[Desktop Entry]\nType=Application\nName=Rainy75\nComment=" + i18n.T("Панель управления Rainy75") + "\n" +
 		"Exec=" + quoted + " " + HiddenFlag + "\nX-GNOME-Autostart-enabled=true\n"
 	return os.WriteFile(p, []byte(entry), 0o644)
 }

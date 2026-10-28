@@ -6,8 +6,8 @@ package rainy
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
 	"fmt"
+	"rainy75/internal/i18n"
 	"time"
 
 	"rainy75/internal/smp"
@@ -67,7 +67,7 @@ func (k *Keyboard) SetKeys(colors map[int]Color) error {
 	px := make([]byte, 0, 4*len(colors))
 	for pos, c := range colors {
 		if pos < 0 || pos >= Positions {
-			return fmt.Errorf("нет клавиши %d", pos)
+			return i18n.Errorf("нет клавиши %d", pos)
 		}
 		px = append(px, byte(pos), c.R, c.G, c.B)
 	}
@@ -79,7 +79,7 @@ func (k *Keyboard) SetKeys(colors map[int]Color) error {
 
 func (k *Keyboard) Frame(frame []Color) error {
 	if len(frame) != Positions {
-		return fmt.Errorf("в кадре должно быть %d цветов, а не %d", Positions, len(frame))
+		return i18n.Errorf("в кадре должно быть %d цветов, а не %d", Positions, len(frame))
 	}
 	rgb := make([]byte, 0, 3*Positions)
 	for _, c := range frame {
@@ -150,10 +150,10 @@ func (k *Keyboard) Upload(img []byte, progress func(done, total int)) error {
 			Off *int `cbor:"off"`
 		}
 		if err := k.c.CallTimeout(uploadTimeout, smp.OpWrite, smp.GroupImage, cmdImageUpload, req, &r); err != nil {
-			return fmt.Errorf("загрузка, смещение %d: %w", off, err)
+			return i18n.Errorf("загрузка, смещение %d: %w", off, err)
 		}
 		if r.Off == nil || *r.Off < off || *r.Off > len(img) {
-			return fmt.Errorf("загрузка, смещение %d: неожиданный ответ клавиатуры", off)
+			return i18n.Errorf("загрузка, смещение %d: неожиданный ответ клавиатуры", off)
 		}
 		off = *r.Off
 		if progress != nil {
@@ -176,7 +176,7 @@ func (k *Keyboard) Reset() error {
 // mcubootMagic — подпись заголовка образа MCUboot (IMAGE_MAGIC).
 const mcubootMagic = 0x96f3b83d
 
-var ErrNotImage = errors.New("это не образ MCUboot: нужен подписанный файл zmk.signed.bin из сборки rainy75-studio")
+var ErrNotImage = i18n.Error("это не образ MCUboot: нужен подписанный файл zmk.signed.bin из сборки rainy75-studio")
 
 func ImageVersion(img []byte) (string, error) {
 	if len(img) < 32 || binary.LittleEndian.Uint32(img) != mcubootMagic {

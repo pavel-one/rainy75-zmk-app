@@ -3,9 +3,9 @@
 package indicator
 
 import (
-	"errors"
 	"fmt"
 	"math"
+	"rainy75/internal/i18n"
 	"regexp"
 	"time"
 
@@ -42,13 +42,13 @@ func (c Config) Validate() (Config, error) {
 	switch c.Style {
 	case "pulse", "flash", "sweep", "solid":
 	default:
-		return c, fmt.Errorf("неизвестный стиль индикации %q", c.Style)
+		return c, i18n.Errorf("неизвестный стиль индикации %q", c.Style)
 	}
 	if _, ok := keySets[c.Keys]; !ok {
-		return c, fmt.Errorf("неизвестный набор клавиш %q", c.Keys)
+		return c, i18n.Errorf("неизвестный набор клавиш %q", c.Keys)
 	}
 	if !hexColor.MatchString(c.MacColor) || !hexColor.MatchString(c.WinColor) {
-		return c, errors.New("цвет должен быть в виде #rrggbb")
+		return c, i18n.Error("цвет должен быть в виде #rrggbb")
 	}
 	c.Duration = max(minDuration, min(maxDuration, c.Duration))
 	return c, nil

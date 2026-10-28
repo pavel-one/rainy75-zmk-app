@@ -8,6 +8,7 @@ package battery
 
 import (
 	"context"
+	"rainy75/internal/i18n"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ func Read(ctx context.Context) Status { return readPlatform(ctx) }
 
 func notFound() Status {
 	return Status{
-		Message: "ОС не сообщает заряд. Подключите клавиатуру по Bluetooth или нажмите Fn+B — индикатор на клавишах покажет уровень.",
+		Message: i18n.T("ОС не сообщает заряд. Подключите клавиатуру по Bluetooth или нажмите Fn+B — индикатор на клавишах покажет уровень."),
 	}
 }
 

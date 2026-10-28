@@ -12,6 +12,7 @@ import "C"
 
 import (
 	"errors"
+	"rainy75/internal/i18n"
 	"sync"
 	"time"
 	"unsafe"
@@ -19,7 +20,7 @@ import (
 
 const Supported = true
 
-var ErrClosed = errors.New("соединение по Bluetooth закрыто")
+var ErrClosed = i18n.Error("соединение по Bluetooth закрыто")
 
 // Port — SMP-канал по Bluetooth; совместим с smp.Port.
 type Port struct {

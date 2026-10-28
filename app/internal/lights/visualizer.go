@@ -1,7 +1,7 @@
 package lights
 
 import (
-	"fmt"
+	"rainy75/internal/i18n"
 	"time"
 
 	"rainy75/internal/layout"
@@ -28,7 +28,7 @@ func (c VisualizerConfig) Validate() (VisualizerConfig, error) {
 		}
 	}
 	if c.Gain <= 0 {
-		return c, fmt.Errorf("чувствительность должна быть больше нуля")
+		return c, i18n.Error("чувствительность должна быть больше нуля")
 	}
 	c.Gain = max(0.5, min(4, c.Gain))
 	return c, nil

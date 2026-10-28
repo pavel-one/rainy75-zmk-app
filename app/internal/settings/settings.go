@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"rainy75/internal/i18n"
 
 	"rainy75/internal/indicator"
 	"rainy75/internal/lights"
@@ -21,6 +22,7 @@ type Settings struct {
 	Pomodoro   lights.PomodoroConfig   `json:"pomodoro"`
 	Visualizer lights.VisualizerConfig `json:"visualizer"`
 	Bluetooth  bool                    `json:"bluetooth"` // искать клавиатуру и по Bluetooth
+	Language   string                  `json:"language"`  // ru, en или пусто — язык системы
 }
 
 func Default() Settings {
@@ -83,6 +85,9 @@ func (s Settings) Validate() (Settings, error) {
 	if s.Visualizer, err = s.Visualizer.Validate(); err != nil {
 		return s, err
 	}
+	if s.Language != "" && s.Language != "ru" && s.Language != "en" {
+		return s, i18n.Errorf("неизвестный язык %q", s.Language)
+	}
 	return s, nil
 }
 
@@ -105,6 +110,12 @@ func Load(path string) Settings {
 	s.Pomodoro = section(raw["pomodoro"], s.Pomodoro, lights.PomodoroConfig.Validate)
 	s.Visualizer = section(raw["visualizer"], s.Visualizer, lights.VisualizerConfig.Validate)
 	s.Bluetooth = section(raw["bluetooth"], s.Bluetooth, func(b bool) (bool, error) { return b, nil })
+	s.Language = section(raw["language"], s.Language, func(l string) (string, error) {
+		if l != "" && l != "ru" && l != "en" {
+			return "", i18n.Errorf("неизвестный язык %q", l)
+		}
+		return l, nil
+	})
 	return s
 }
 

@@ -4,6 +4,9 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as rainy$0 from "./internal/rainy/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as update$0 from "./internal/update/models.js";
 
 export interface AnimationParams {
     "kind": string;
@@ -96,4 +99,15 @@ export interface Progress {
     "done": number;
     "total": number;
     "text": string;
+}
+
+export interface UpdateInfo {
+    "current": string;
+    "available": boolean;
+    "release": update$0.Release;
+}
+
+export interface UpdateProgress {
+    "done": number;
+    "total": number;
 }

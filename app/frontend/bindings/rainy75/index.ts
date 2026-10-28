@@ -14,5 +14,7 @@ export type {
     KeyColor,
     LightingState,
     Permissions,
-    Progress
+    Progress,
+    UpdateInfo,
+    UpdateProgress
 } from "./models.js";

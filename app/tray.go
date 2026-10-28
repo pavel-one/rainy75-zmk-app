@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"rainy75/internal/i18n"
 	"runtime"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -45,29 +46,36 @@ func setupTray(app *application.App, window *application.WebviewWindow, kb *Keyb
 
 	var renderNow func(DeviceStatus)
 	menu := application.NewMenu()
-	status := menu.Add("Поиск клавиатуры…").SetEnabled(false)
+	status := menu.Add(i18n.T("Поиск клавиатуры…")).SetEnabled(false)
 	menu.AddSeparator()
 	mac := menu.AddRadio("macOS", false)
 	win := menu.AddRadio("Windows", false)
 	menu.AddSeparator()
-	restore := menu.Add("Вернуть эффекты прошивки")
-	pomodoro := menu.Add("Помодоро: старт")
+	restore := menu.Add("")
+	pomodoro := menu.Add(i18n.T("Помодоро: старт"))
 	menu.AddSeparator()
-	auto := menu.AddCheckbox("Запускать при входе в систему", kb.Autostart())
-	menu.Add("Открыть Rainy75").OnClick(func(*application.Context) { showWindow() })
+	auto := menu.AddCheckbox("", kb.Autostart())
+	open := menu.Add("").OnClick(func(*application.Context) { showWindow() })
 	menu.AddSeparator()
-	menu.Add("Выйти").OnClick(func(*application.Context) { app.Quit() })
+	quit := menu.Add("").OnClick(func(*application.Context) { app.Quit() })
+	relabel := func() {
+		restore.SetLabel(i18n.T("Вернуть эффекты прошивки"))
+		auto.SetLabel(i18n.T("Запускать при входе в систему"))
+		open.SetLabel(i18n.T("Открыть Rainy75"))
+		quit.SetLabel(i18n.T("Выйти"))
+	}
+	relabel()
 
 	// Нативное меню трогаем только из главного потока и без пересборки
 	// (menu.Update пересоздаёт пункты): каждый пункт обновляется сам.
 	render := func(st DeviceStatus) { application.InvokeSync(func() { renderNow(st) }) }
 	renderNow = func(st DeviceStatus) {
 		if st.Connected {
-			status.SetLabel("Rainy75 подключена · " + modeTitle(st.Windows))
-			tray.SetTooltip("Rainy75 — режим " + modeTitle(st.Windows))
+			status.SetLabel(i18n.T("Rainy75 подключена · ") + modeTitle(st.Windows))
+			tray.SetTooltip(i18n.T("Rainy75 — режим ") + modeTitle(st.Windows))
 		} else {
-			status.SetLabel("Клавиатура не подключена по USB")
-			tray.SetTooltip("Rainy75 — не подключена")
+			status.SetLabel(i18n.T("Клавиатура не подключена"))
+			tray.SetTooltip(i18n.T("Rainy75 — не подключена"))
 		}
 		// В строке меню macOS рядом со значком виден текущий режим.
 		if runtime.GOOS == "darwin" {
@@ -124,7 +132,7 @@ func setupTray(app *application.App, window *application.WebviewWindow, kb *Keyb
 		case st.Phase != "idle":
 			label = "Помодоро: продолжить"
 		}
-		application.InvokeSync(func() { pomodoro.SetLabel(label) })
+		application.InvokeSync(func() { pomodoro.SetLabel(i18n.T(label)) })
 	}
 	pomodoro.OnClick(func(*application.Context) {
 		if st := kb.PomodoroState(); st.Running {
@@ -143,6 +151,12 @@ func setupTray(app *application.App, window *application.WebviewWindow, kb *Keyb
 		if on, ok := e.Data.(bool); ok {
 			application.InvokeSync(func() { auto.SetChecked(on) })
 		}
+	})
+
+	app.Event.On(eventLanguage, func(*application.CustomEvent) {
+		application.InvokeSync(relabel)
+		render(kb.Status())
+		renderPomodoro(kb.PomodoroState())
 	})
 
 	tray.SetMenu(menu)

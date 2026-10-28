@@ -2,11 +2,13 @@
 
 package host
 
-import "errors"
+import (
+	"rainy75/internal/i18n"
+)
 
 const Supported = false
 
-var errUnsupported = errors.New("доступно только на macOS")
+var errUnsupported = i18n.Error("доступно только на macOS")
 
 var ErrNoInputMonitoring = errUnsupported
 

@@ -4,8 +4,8 @@ package device
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
+	"rainy75/internal/i18n"
 	"sort"
 	"strings"
 
@@ -18,7 +18,7 @@ import (
 // zmkVendorID — ZMK по умолчанию представляется идентификаторами OpenMoko.
 const zmkVendorID = "1D50"
 
-var ErrNotFound = errors.New("Rainy75 не найдена: подключите её кабелем USB-C. По Bluetooth управление недоступно")
+var ErrNotFound = i18n.Error("Rainy75 не найдена: подключите её кабелем USB-C. По Bluetooth управление недоступно")
 
 type Info struct {
 	Port string `json:"port"`
@@ -35,7 +35,7 @@ func candidateName(name string) bool {
 func Find() ([]Info, error) {
 	ports, err := enumerator.GetDetailedPortsList()
 	if err != nil {
-		return nil, fmt.Errorf("список последовательных портов: %w", err)
+		return nil, i18n.Errorf("список последовательных портов: %w", err)
 	}
 	var found []Info
 	for _, p := range ports {
@@ -59,9 +59,9 @@ func Open(info Info) (*smp.Client, error) {
 	if err != nil {
 		var pe *serial.PortError
 		if errors.As(err, &pe) && pe.Code() == serial.PortBusy {
-			return nil, fmt.Errorf("порт %s занят другой программой (Rainy75 Studio, mcumgr или консоль) — закройте её", info.Port)
+			return nil, i18n.Errorf("порт %s занят другой программой (Rainy75 Studio, mcumgr или консоль) — закройте её", info.Port)
 		}
-		return nil, fmt.Errorf("открытие порта %s: %w", info.Port, err)
+		return nil, i18n.Errorf("открытие порта %s: %w", info.Port, err)
 	}
 	return smp.NewClient(p), nil
 }

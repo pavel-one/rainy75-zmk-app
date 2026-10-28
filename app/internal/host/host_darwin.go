@@ -11,8 +11,7 @@ package host
 import "C"
 
 import (
-	"errors"
-	"fmt"
+	"rainy75/internal/i18n"
 	"sync"
 	"unsafe"
 )
@@ -46,7 +45,7 @@ func KeyTapAllowed() bool { return C.rh_keytap_allowed() != 0 }
 func RequestKeyTap() bool { return C.rh_keytap_request() != 0 }
 
 // ErrNoInputMonitoring — нет разрешения «Мониторинг ввода».
-var ErrNoInputMonitoring = errors.New("нет разрешения «Мониторинг ввода»: Системные настройки → Конфиденциальность и безопасность → Мониторинг ввода")
+var ErrNoInputMonitoring = i18n.Error("нет разрешения «Мониторинг ввода»: Системные настройки → Конфиденциальность и безопасность → Мониторинг ввода")
 
 // StartKeyTap запускает перехват нажатий; onKey получает KeyboardEvent.code.
 // Перехват только читает события и ничего не меняет.
@@ -59,7 +58,7 @@ func StartKeyTap(onKey func(code string)) error {
 	}
 	keyOnce.Do(func() {
 		if C.rh_keytap_start() != 0 {
-			keyStart = errors.New("не удалось перехватить нажатия клавиш")
+			keyStart = i18n.Error("не удалось перехватить нажатия клавиш")
 		}
 	})
 	return keyStart
@@ -91,7 +90,7 @@ type CPU struct{ busy, total uint64 }
 func (c *CPU) Usage() (float64, error) {
 	var busy, total C.ulonglong
 	if C.rh_cpu_ticks(&busy, &total) != 0 {
-		return 0, errors.New("не удалось прочитать загрузку процессора")
+		return 0, i18n.Error("не удалось прочитать загрузку процессора")
 	}
 	b, t := uint64(busy), uint64(total)
 	defer func() { c.busy, c.total = b, t }()
@@ -106,7 +105,7 @@ func Volume() (float64, bool, error) {
 	var v C.float
 	var muted C.int
 	if rc := C.rh_volume(&v, &muted); rc != 0 {
-		return 0, false, fmt.Errorf("не удалось прочитать громкость (код %d)", int(rc))
+		return 0, false, i18n.Errorf("не удалось прочитать громкость (код %d)", int(rc))
 	}
 	return float64(v), muted != 0, nil
 }
@@ -117,9 +116,9 @@ func StartAudio() error {
 	case 0:
 		return nil
 	case -100:
-		return errors.New("звук системы доступен с macOS 14.2")
+		return i18n.Error("звук системы доступен с macOS 14.2")
 	default:
-		return fmt.Errorf("не удалось подключиться к звуку системы (код Core Audio %d); проверьте разрешение «Запись звука системы»", int(rc))
+		return i18n.Errorf("не удалось подключиться к звуку системы (код Core Audio %d); проверьте разрешение «Запись звука системы»", int(rc))
 	}
 }
 

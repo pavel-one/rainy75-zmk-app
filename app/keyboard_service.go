@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
+	"rainy75/internal/i18n"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -32,6 +32,7 @@ const (
 	eventFrame     = "lighting:frame" // кадр для схемы в интерфейсе; null — эффекты прошивки
 	eventAutostart = "autostart:changed"
 	eventPomodoro  = "pomodoro:state"
+	eventLanguage  = "language:changed"
 
 	pollDevice  = 2 * time.Second
 	pollBattery = 30 * time.Second
@@ -79,6 +80,9 @@ func init() {
 	application.RegisterEvent[[]string](eventFrame)
 	application.RegisterEvent[bool](eventAutostart)
 	application.RegisterEvent[lights.PomodoroState](eventPomodoro)
+	application.RegisterEvent[string](eventLanguage)
+	application.RegisterEvent[UpdateInfo](eventUpdate)
+	application.RegisterEvent[UpdateProgress](eventUpdateProgress)
 }
 
 type KeyboardService struct {
@@ -96,6 +100,7 @@ type KeyboardService struct {
 
 	windows atomic.Bool // режим для сопоставления нажатий с клавишами
 	lighting
+	upd updater
 }
 
 func NewKeyboardService() *KeyboardService {
@@ -104,6 +109,8 @@ func NewKeyboardService() *KeyboardService {
 		s.cfgPath = path
 		s.cfg = settings.Load(path)
 	}
+	i18n.Set(i18n.Resolve(s.cfg.Language))
+	s.status.Message = device.ErrNotFound.Error()
 	s.initLighting()
 	return s
 }
@@ -112,6 +119,7 @@ func (s *KeyboardService) ServiceStartup(ctx context.Context, _ application.Serv
 	ctx, s.cancel = context.WithCancel(ctx)
 	go s.watchDevice(ctx)
 	go s.watchBattery(ctx)
+	go s.watchUpdates(ctx)
 	s.startLighting(ctx)
 	return nil
 }
@@ -164,7 +172,7 @@ func (s *KeyboardService) pollDevice() {
 	default:
 		info, err := s.kb.Info()
 		if err != nil {
-			s.disconnectLocked("Связь с клавиатурой потеряна")
+			s.disconnectLocked(i18n.T("Связь с клавиатурой потеряна"))
 			break
 		}
 		// Прошивка сама вышла из режима кадров — нажали Fn-клавишу подсветки.
@@ -207,7 +215,7 @@ func (s *KeyboardService) connectLocked() bool {
 		if s.attachLocked(c, "usb", p.Port) {
 			return true
 		}
-		msg = "на порту не отвечает прошивка rainy75-studio (группа mcumgr 65)"
+		msg = i18n.T("на порту не отвечает прошивка rainy75-studio (группа mcumgr 65)")
 	}
 
 	if ble.Supported && s.config().Bluetooth && time.Since(s.bleTried) >= bleRetry {
@@ -219,9 +227,9 @@ func (s *KeyboardService) connectLocked() bool {
 			if s.attachLocked(c, "bluetooth", "Bluetooth") {
 				return true
 			}
-			msg = "клавиатура по Bluetooth не отвечает на команды SMP"
+			msg = i18n.T("клавиатура по Bluetooth не отвечает на команды SMP")
 		} else if len(ports) == 0 {
-			msg = "Rainy75 не найдена: подключите кабель USB-C или Bluetooth (" + err.Error() + ")"
+			msg = i18n.Sprintf("Rainy75 не найдена: подключите кабель USB-C или Bluetooth (%v)", err)
 		}
 	}
 	s.status = DeviceStatus{Message: msg}
@@ -240,7 +248,7 @@ func (s *KeyboardService) attachLocked(c *smp.Client, conn, port string) bool {
 		c.Close()
 		return false
 	}
-	st := DeviceStatus{Connected: true, Connection: conn, Port: port, Firmware: "нет данных", Windows: info.Windows, Host: info.Host}
+	st := DeviceStatus{Connected: true, Connection: conn, Port: port, Firmware: i18n.T("нет данных"), Windows: info.Windows, Host: info.Host}
 	if imgs, err := kb.Images(); err == nil {
 		for _, img := range imgs {
 			if img.Active {
@@ -270,7 +278,7 @@ func (s *KeyboardService) withKeyboard(fn func(kb *rainy.Keyboard) error) error 
 	s.mu.Lock()
 	if s.flashing {
 		s.mu.Unlock()
-		return errors.New("идёт обновление прошивки")
+		return i18n.Error("идёт обновление прошивки")
 	}
 	if s.kb == nil {
 		err := errors.New(s.status.Message)
@@ -280,7 +288,7 @@ func (s *KeyboardService) withKeyboard(fn func(kb *rainy.Keyboard) error) error 
 	err := fn(s.kb)
 	lost := errors.Is(err, smp.ErrIO) || errors.Is(err, smp.ErrTimeout)
 	if lost {
-		s.disconnectLocked("Связь с клавиатурой потеряна")
+		s.disconnectLocked(i18n.T("Связь с клавиатурой потеряна"))
 	}
 	st := s.status
 	s.mu.Unlock()
@@ -298,7 +306,17 @@ func (s *KeyboardService) Status() DeviceStatus {
 
 func (s *KeyboardService) Layout() layout.Layout { return layout.Rainy75 }
 
-func (s *KeyboardService) Effects() []effects.Effect { return effects.List }
+func (s *KeyboardService) Effects() []effects.Effect {
+	out := make([]effects.Effect, len(effects.List))
+	for i, e := range effects.List {
+		e.Name = i18n.T(e.Name)
+		out[i] = e
+	}
+	return out
+}
+
+// Language возвращает язык интерфейса: выбранный или язык системы.
+func (s *KeyboardService) Language() string { return i18n.Lang() }
 
 func modeName(win bool) string {
 	if win {
@@ -319,7 +337,7 @@ func (s *KeyboardService) OSMode() (string, error) {
 // SetOSMode переключает режим (как Fn+M) и возвращает итоговый.
 func (s *KeyboardService) SetOSMode(mode string) (string, error) {
 	if mode != "windows" && mode != "mac" {
-		return "", fmt.Errorf("неизвестный режим %q", mode)
+		return "", i18n.Errorf("неизвестный режим %q", mode)
 	}
 	var win bool
 	err := s.withKeyboard(func(kb *rainy.Keyboard) (err error) {
@@ -389,11 +407,11 @@ func readImage(path string) ([]byte, string, error) {
 func (s *KeyboardService) ChooseFirmware() (FirmwareFile, error) {
 	app := application.Get()
 	if app == nil {
-		return FirmwareFile{}, errors.New("приложение не запущено")
+		return FirmwareFile{}, i18n.Error("приложение не запущено")
 	}
 	path, err := app.Dialog.OpenFile().
-		SetTitle("Образ прошивки Rainy75 (zmk.signed.bin)").
-		AddFilter("Образ MCUboot", "*.bin").
+		SetTitle(i18n.T("Образ прошивки Rainy75 (zmk.signed.bin)")).
+		AddFilter(i18n.T("Образ MCUboot"), "*.bin").
 		PromptForSingleSelection()
 	if err != nil || path == "" {
 		return FirmwareFile{}, err
@@ -433,12 +451,12 @@ func (s *KeyboardService) FlashFirmware(path string) error {
 	}
 	fail := func(err error) error {
 		emit(eventProgress, Progress{Stage: "error", Text: err.Error()})
-		finish("Обновление прервано: " + err.Error())
+		finish(i18n.Sprintf("Обновление прервано: %v", err))
 		return err
 	}
 
 	err = kb.Upload(data, func(done, total int) {
-		emit(eventProgress, Progress{Stage: "upload", Done: done, Total: total, Text: "Загрузка образа"})
+		emit(eventProgress, Progress{Stage: "upload", Done: done, Total: total, Text: i18n.T("Загрузка образа")})
 	})
 	if err != nil {
 		return fail(err)
@@ -454,15 +472,15 @@ func (s *KeyboardService) FlashFirmware(path string) error {
 		}
 	}
 	if hash == nil {
-		return fail(errors.New("образ не появился во втором слоте"))
+		return fail(i18n.Error("образ не появился во втором слоте"))
 	}
 	if err := kb.Test(hash); err != nil {
 		return fail(err)
 	}
-	emit(eventProgress, Progress{Stage: "reboot", Done: len(data), Total: len(data), Text: "Перезагрузка: MCUboot ставит новую прошивку"})
+	emit(eventProgress, Progress{Stage: "reboot", Done: len(data), Total: len(data), Text: i18n.T("Перезагрузка: MCUboot ставит новую прошивку")})
 	_ = kb.Reset() // клавиатура может не успеть ответить до перезагрузки
 
-	finish("Клавиатура перезагружается с новой прошивкой…")
-	emit(eventProgress, Progress{Stage: "done", Done: len(data), Total: len(data), Text: "Готово"})
+	finish(i18n.T("Клавиатура перезагружается с новой прошивкой…"))
+	emit(eventProgress, Progress{Stage: "done", Done: len(data), Total: len(data), Text: i18n.T("Готово")})
 	return nil
 }

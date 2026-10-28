@@ -22,9 +22,12 @@ declare module "@wailsio/runtime" {
             "battery:status": battery$0.Status;
             "device:status": main$0.DeviceStatus;
             "firmware:progress": main$0.Progress;
+            "language:changed": string;
             "lighting:frame": string[] | null;
             "lighting:state": main$0.LightingState;
             "pomodoro:state": lights$0.PomodoroState;
+            "update:available": main$0.UpdateInfo;
+            "update:progress": main$0.UpdateProgress;
         }
     }
 }

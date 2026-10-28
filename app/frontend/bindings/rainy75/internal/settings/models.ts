@@ -21,4 +21,9 @@ export interface Settings {
      * искать клавиатуру и по Bluetooth
      */
     "bluetooth": boolean;
+
+    /**
+     * ru, en или пусто — язык системы
+     */
+    "language": string;
 }

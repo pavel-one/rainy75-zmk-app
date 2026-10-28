@@ -2,9 +2,9 @@ package smp
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
+	"rainy75/internal/i18n"
 	"sync"
 	"time"
 
@@ -25,9 +25,9 @@ const headerSize = 8
 
 var (
 	// ErrTimeout — клавиатура не ответила вовремя.
-	ErrTimeout = errors.New("клавиатура не ответила")
+	ErrTimeout = i18n.Error("клавиатура не ответила")
 	// ErrIO — сбой обмена с портом (например, кабель отключили).
-	ErrIO = errors.New("ошибка обмена с клавиатурой")
+	ErrIO = i18n.Error("ошибка обмена с клавиатурой")
 )
 
 var mgmtErrors = map[int]string{
@@ -53,7 +53,7 @@ func (e *MgmtError) Error() string {
 	if !ok {
 		msg = "ошибка"
 	}
-	return fmt.Sprintf("клавиатура: %s (группа %d, код %d)", msg, e.Group, e.Code)
+	return i18n.Sprintf("клавиатура: %s (группа %d, код %d)", i18n.T(msg), e.Group, e.Code)
 }
 
 // Port — последовательный порт с таймаутом чтения (go.bug.st/serial).
@@ -124,7 +124,7 @@ func (c *Client) CallTimeout(timeout time.Duration, op byte, group uint16, id by
 	}
 	body, err := cbor.Marshal(req)
 	if err != nil {
-		return fmt.Errorf("SMP: кодирование запроса: %w", err)
+		return i18n.Errorf("SMP: кодирование запроса: %w", err)
 	}
 
 	c.mu.Lock()
@@ -137,7 +137,7 @@ func (c *Client) CallTimeout(timeout time.Duration, op byte, group uint16, id by
 	binary.BigEndian.PutUint16(hdr[4:], group)
 	hdr[6], hdr[7] = c.seq, id
 	if _, err := c.p.Write(c.dec.encode(append(hdr, body...))); err != nil {
-		return fmt.Errorf("%w: запись: %v", ErrIO, err)
+		return i18n.Errorf("%w: запись: %v", ErrIO, err)
 	}
 
 	payload, err := c.await(timeout, op+1, group, id, c.seq)
@@ -152,7 +152,7 @@ func (c *Client) CallTimeout(timeout time.Duration, op byte, group uint16, id by
 		} `cbor:"err"` // формат ошибок SMP v2
 	}
 	if err := cbor.Unmarshal(payload, &status); err != nil {
-		return fmt.Errorf("SMP: разбор ответа: %w", err)
+		return i18n.Errorf("SMP: разбор ответа: %w", err)
 	}
 	if status.RC != 0 {
 		return &MgmtError{Group: group, Code: status.RC}
@@ -162,7 +162,7 @@ func (c *Client) CallTimeout(timeout time.Duration, op byte, group uint16, id by
 	}
 	if resp != nil {
 		if err := cbor.Unmarshal(payload, resp); err != nil {
-			return fmt.Errorf("SMP: разбор ответа: %w", err)
+			return i18n.Errorf("SMP: разбор ответа: %w", err)
 		}
 	}
 	return nil
@@ -178,7 +178,7 @@ func (c *Client) await(timeout time.Duration, op byte, group uint16, id, seq byt
 		}
 		n, err := c.p.Read(buf)
 		if err != nil {
-			return nil, fmt.Errorf("%w: чтение: %v", ErrIO, err)
+			return nil, i18n.Errorf("%w: чтение: %v", ErrIO, err)
 		}
 		packets, _ := c.dec.feed(buf[:n]) // битый кадр — ждём следующий
 		for _, pkt := range packets {
@@ -191,7 +191,7 @@ func (c *Client) await(timeout time.Duration, op byte, group uint16, id, seq byt
 			}
 			size := int(binary.BigEndian.Uint16(pkt[2:]))
 			if len(pkt) < headerSize+size {
-				return nil, fmt.Errorf("SMP: ответ короче заявленного")
+				return nil, i18n.Error("SMP: ответ короче заявленного")
 			}
 			return pkt[headerSize : headerSize+size], nil
 		}

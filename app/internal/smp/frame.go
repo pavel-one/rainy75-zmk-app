@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
-	"errors"
+	"rainy75/internal/i18n"
 )
 
 var (
@@ -58,7 +58,7 @@ func encodeFrame(packet []byte) []byte {
 	return out.Bytes()
 }
 
-var errBadCRC = errors.New("SMP: неверная контрольная сумма")
+var errBadCRC = i18n.Error("SMP: неверная контрольная сумма")
 
 // decoder собирает SMP-пакеты из потока байт. Строки без маркеров —
 // это вывод консоли прошивки (она делит порт с mcumgr), их пропускаем.
