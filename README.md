@@ -1,0 +1,153 @@
+<div align="center">
+
+<img src=".github/assets/logo.png" alt="Rainy75" width="128" height="128">
+
+# Rainy75 ZMK App
+
+**Панель управления для Wobkey Rainy75 Pro с открытой прошивкой ZMK**
+
+Подсветка каждой клавиши, анимации, визуализатор звука, индикаторы, помодоро и обновление прошивки — без ZMK Studio и фирменного софта.
+
+[![Release](https://img.shields.io/github/v/release/pavel-one/rainy75-zmk-app?style=flat-square&color=7c5cff)](https://github.com/pavel-one/rainy75-zmk-app/releases/latest)
+[![Build](https://img.shields.io/github/actions/workflow/status/pavel-one/rainy75-zmk-app/release.yml?style=flat-square&label=build)](https://github.com/pavel-one/rainy75-zmk-app/actions/workflows/release.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/pavel-one/rainy75-zmk-app/test.yml?style=flat-square&label=tests)](https://github.com/pavel-one/rainy75-zmk-app/actions/workflows/test.yml)
+[![Downloads](https://img.shields.io/github/downloads/pavel-one/rainy75-zmk-app/total?style=flat-square&color=2ea043)](https://github.com/pavel-one/rainy75-zmk-app/releases)
+<br>
+[![Go](https://img.shields.io/badge/Go-1.26-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
+[![Wails](https://img.shields.io/badge/Wails-v3-DF0000?style=flat-square)](https://v3.wails.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![ZMK](https://img.shields.io/badge/firmware-ZMK-1f6feb?style=flat-square)](https://zmk.dev)
+[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-555?style=flat-square)](#установка)
+
+[Возможности](#возможности) · [Установка](#установка) · [Прошивка](#прошивка) · [Сборка](#сборка) · [Устройство](#устройство)
+
+</div>
+
+---
+
+## Возможности
+
+| | |
+|---|---|
+| 🎨 **Холст** | Цвет каждой клавиши: кисть, ластик, пипетка, заливка. Схема в окне повторяет то, что горит на клавиатуре |
+| ✨ **Анимации** | 21 эффект, который считает приложение: сдвиг оттенка, насыщенность, свои цвета, скорость — всё меняется на лету |
+| 🔊 **Визуализатор звука** | Спектр звука системы столбиками по всей клавиатуре |
+| ⌨️ **Реакция на нажатия** | Круги, след, крест, тепловая карта |
+| 🚦 **Индикаторы** | Раскладка RU/EN, Caps Lock, громкость или загрузка CPU на ряду цифр, режим Win/Mac |
+| 🍅 **Помодоро** | Таймер прямо на F-ряду, вспышка на смене фаз |
+| 💡 **Вспышка по команде** | `rainy75 --flash '#ff0000' --times 3` — мигнуть клавиатурой из скрипта или хука |
+| 🔁 **Win / Mac** | То же, что `Fn`+`M`: прошивка переключает слой и запоминает выбор |
+| 📶 **Bluetooth** | Работает без кабеля через GATT-сервис SMP |
+| 🔋 **Батарея** | Заряд клавиатуры из ОС |
+| ⬆️ **Обновление прошивки** | Образ пишется во второй слот MCUboot, при неудачном запуске прошивка откатывается |
+| 🧪 **Тестер** | Проверка всех клавиш с подписями под macOS и Windows |
+| 🗂 **Трей и автозапуск** | Режим, эффекты, помодоро и автозапуск из меню в трее |
+
+## Установка
+
+Готовые сборки лежат на странице [Releases](https://github.com/pavel-one/rainy75-zmk-app/releases/latest):
+
+| ОС | Файл |
+|---|---|
+| macOS (Apple Silicon и Intel) | `rainy75-macos-universal.zip` |
+| Windows x64 | `rainy75-windows-amd64.zip` |
+| Linux x64 | `rainy75-linux-amd64.tar.gz` |
+
+Сборки не подписаны. На macOS после распаковки снимите карантин:
+
+```bash
+xattr -dr com.apple.quarantine Rainy75.app
+```
+
+На Linux нужны GTK 4 и WebKitGTK 6.0 (Ubuntu 24.04+, Debian 13+).
+
+> [!NOTE]
+> Bluetooth, визуализатор звука, реакция на нажатия, раскладка, Caps Lock, CPU и громкость пока работают только на macOS (визуализатор — с 14.2).
+> Подсветка, анимации, помодоро, режим Win/Mac, тестер и обновление прошивки по кабелю — на всех ОС.
+
+## Прошивка
+
+Приложение рассчитано на открытую прошивку [rainy75-studio](https://github.com/Code-Wizard-Wilson/rainy75-studio) — порт ZMK на Rainy75 Pro (автор Code-Wizard-Wilson, Apache-2.0).
+
+| | |
+|---|---|
+| Контроллер | Telink TLSR9511 (B91, RISC-V), 1 МБ flash |
+| Раскладки | ISO и ANSI, 83 позиции keymap |
+| Подключение | USB-C и Bluetooth LE, три профиля. Приёмник 2.4 ГГц **не работает** |
+| Режимы | macOS по умолчанию, Windows — слой 2 поверх базового |
+| Обновление | MCUboot с откатом |
+| USB | `Rainy 75 Pro`, VID:PID `1D50:615E` |
+
+С компьютером прошивка общается по **SMP (mcumgr)** через последовательный порт USB CDC ACM или по Bluetooth:
+
+- `0` — ОС (перезагрузка), `1` — образы прошивки;
+- `65` (`rgb_mgmt`) — цвета клавиш, заливка, полный кадр из 83 цветов, режим Win/Mac;
+- `64` (`flash_mgmt`) — сырой доступ к flash; приложение его **не трогает**.
+
+Свой USB-интерфейс (например, raw HID) у B91 не помещается в память эндпоинтов: USB перестаёт определяться, и вернуть клавиатуру можно только программатором. Поэтому всё идёт через уже существующий порт CDC ACM.
+
+Порт может занимать только одна программа — перед запуском закройте Rainy75 Studio, `mcumgr` и последовательную консоль. Первая установка ZMK и возврат к заводской прошивке делаются скриптами rainy75-studio.
+
+<details>
+<summary>Клавиши подсветки прошивки</summary>
+
+Цвета с компьютера не переживают перезагрузку клавиатуры, а любая Fn-клавиша подсветки возвращает эффекты прошивки.
+
+| Клавиши | Действие |
+|---|---|
+| `Fn`+`Enter` | следующий эффект |
+| `Fn`+`⌫` | подсветка вкл/выкл |
+| `Fn`+`#` | оттенок |
+| `Fn`+`↑` / `↓` | яркость |
+| `Fn`+`←` / `→` | скорость |
+| `Fn`+`B` | индикатор заряда |
+
+</details>
+
+<details>
+<summary>Разрешения macOS</summary>
+
+Системные настройки → Конфиденциальность и безопасность:
+
+- **Мониторинг ввода** — реакция на нажатия;
+- **Запись звука системы** — визуализатор;
+- **Bluetooth** — работа без кабеля.
+
+</details>
+
+## Сборка
+
+Нужны Go 1.26+, Node.js 22+ и [Wails v3](https://v3.wails.io).
+
+```bash
+go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
+cd app
+wails3 dev      # разработка с hot reload
+wails3 build    # бинарник в app/bin
+go test ./internal/... .
+```
+
+Релиз собирается сам: достаточно запушить тег `vX.Y.Z` — GitHub Actions соберёт приложение под macOS, Windows и Linux и выложит архивы в Releases.
+
+## Устройство
+
+```
+app/
+├── main.go, tray.go          окно, трей, флаги запуска
+├── keyboard_service.go       подключение, режим Win/Mac, батарея, прошивка
+├── lighting_service.go       подсветка, индикаторы, визуализатор, помодоро
+├── internal/
+│   ├── smp                   клиент SMP: serial (base64 + CRC16) и Bluetooth, CBOR
+│   ├── ble                   SMP по Bluetooth через CoreBluetooth
+│   ├── device                поиск порта клавиатуры
+│   ├── rainy                 команды прошивки: группа 65, MCUboot
+│   ├── layout                83 позиции, геометрия и подписи клавиш
+│   ├── effects               анимации
+│   ├── lights                компоновщик кадров: база и слои-индикаторы
+│   ├── host                  данные системы: нажатия, раскладка, CPU, звук
+│   ├── indicator             индикация режима Win/Mac
+│   ├── settings              settings.json
+│   └── battery, autostart
+└── frontend/                 интерфейс на TypeScript + Vite
+json/                         описания раскладок заводской прошивки (VIA)
+```
