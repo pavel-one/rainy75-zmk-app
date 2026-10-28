@@ -67,7 +67,8 @@ jobs:
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
           sed -i.bak "s/0\.1\.0/$version/g" build/darwin/Info.plist build/windows/info.json build/linux/nfpm/nfpm.yaml
-          rm -f build/darwin/Info.plist.bak build/windows/info.json.bak build/linux/nfpm/nfpm.yaml.bak
+          sed -i.bak "s/^var version = .*/var version = \"$version\"/" version.go
+          rm -f build/darwin/Info.plist.bak build/windows/info.json.bak build/linux/nfpm/nfpm.yaml.bak version.go.bak
 
       - name: Build
         run: wails3 task ${{ matrix.task }}
@@ -102,6 +103,14 @@ jobs:
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Release notes from tag
+        run: |
+          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents:body)' > notes.md
+          cat notes.md
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -110,5 +119,6 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           name: Rainy75 ${{ github.ref_name }}
+          body_path: notes.md
           generate_release_notes: true
           files: dist/*
