@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=".github/assets/logo.png" alt="Rainy75" width="128" height="128">
+<img src=".github/assets/logo.svg" alt="Rainy75" width="128" height="128">
 
 # Rainy75 ZMK App
 
