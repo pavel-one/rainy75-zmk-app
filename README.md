@@ -4,9 +4,9 @@
 
 # Rainy75 ZMK App
 
-**Панель управления для Wobkey Rainy75 Pro с открытой прошивкой ZMK**
+**Control panel for the Wobkey Rainy75 Pro running open-source ZMK firmware**
 
-Подсветка каждой клавиши, анимации, визуализатор звука, индикаторы, помодоро и обновление прошивки — без ZMK Studio и фирменного софта.
+Per-key lighting, animations, an audio visualizer, indicators, a pomodoro timer and firmware updates — without ZMK Studio or the vendor software.
 
 [![Release](https://img.shields.io/github/v/release/pavel-one/rainy75-zmk-app?style=flat-square&color=7c5cff)](https://github.com/pavel-one/rainy75-zmk-app/releases/latest)
 [![Build](https://img.shields.io/github/actions/workflow/status/pavel-one/rainy75-zmk-app/release.yml?style=flat-square&label=build)](https://github.com/pavel-one/rainy75-zmk-app/actions/workflows/release.yml)
@@ -17,192 +17,205 @@
 [![Wails](https://img.shields.io/badge/Wails-v3-DF0000?style=flat-square)](https://v3.wails.io)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![ZMK](https://img.shields.io/badge/firmware-ZMK-1f6feb?style=flat-square)](https://zmk.dev)
-[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-555?style=flat-square)](#установка)
+[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-555?style=flat-square)](#install)
 
-[Возможности](#возможности) · [Установка](#установка) · [Прошивка](#прошивка) · [Сборка](#сборка) · [Устройство](#устройство)
+[Features](#features) · [Install](#install) · [Firmware](#firmware) · [Build](#build) · [Structure](#structure)
+
+[Русский](README.ru.md) · **English**
 
 </div>
 
 ---
 
 <p align="center">
-  <img src=".github/assets/screenshots/dashboard.png" alt="Дашборд Rainy75" width="900">
+  <img src=".github/assets/screenshots/en/dashboard.png" alt="Rainy75 dashboard" width="900">
 </p>
 
-## Возможности
+## Features
 
 | | |
 |---|---|
-| 🎨 **Холст** | Цвет каждой клавиши: кисть, ластик, пипетка, заливка. Схема в окне повторяет то, что горит на клавиатуре |
-| ✨ **Анимации** | 21 эффект, который считает приложение: сдвиг оттенка, насыщенность, свои цвета, скорость — всё меняется на лету |
-| 🔊 **Визуализатор звука** | Спектр звука системы столбиками по всей клавиатуре |
-| ⌨️ **Реакция на нажатия** | Круги, след, крест, тепловая карта |
-| 🚦 **Индикаторы** | Раскладка RU/EN, Caps Lock, громкость или загрузка CPU на ряду цифр, режим Win/Mac |
-| 🍅 **Помодоро** | Таймер прямо на F-ряду, вспышка на смене фаз |
-| 💡 **Вспышка по команде** | `rainy75 --flash '#ff0000' --times 3` — мигнуть клавиатурой из скрипта или хука |
-| 🔁 **Win / Mac** | То же, что `Fn`+`M`: прошивка переключает слой и запоминает выбор |
-| 📶 **Bluetooth** | Работает без кабеля через GATT-сервис SMP |
-| 🔋 **Батарея** | Заряд клавиатуры из ОС |
-| ⬆️ **Обновление прошивки** | Образ пишется во второй слот MCUboot, при неудачном запуске прошивка откатывается |
-| 🧪 **Тестер** | Проверка всех клавиш с подписями под macOS и Windows |
-| 🗂 **Трей и автозапуск** | Режим, эффекты, помодоро и автозапуск из меню в трее |
+| 🎨 **Canvas** | Color every key: brush, eraser, picker, fill. The map in the window mirrors what is lit on the keyboard |
+| ✨ **Animations** | 21 effects computed by the app: hue shift, saturation, your own colors, speed — all live |
+| 🔊 **Audio visualizer** | System audio spectrum as bars across the whole keyboard |
+| ⌨️ **Key reactions** | Ripples, trail, cross, heat map |
+| 🚦 **Indicators** | Input source RU/EN, Caps Lock, volume or CPU load on the number row, Win/Mac mode |
+| 🍅 **Pomodoro** | A timer right on the F-row, a flash when phases change |
+| 💡 **Flash on command** | `rainy75 --flash '#ff0000' --times 3` — blink the keyboard from a script or hook |
+| 🔁 **Win / Mac** | Same as `Fn`+`M`: the firmware switches the layer and remembers it |
+| 📶 **Bluetooth** | Works without a cable through the SMP GATT service |
+| 🔋 **Battery** | Keyboard charge from the OS |
+| ⬆️ **Firmware update** | The image goes to the second MCUboot slot and rolls back if it fails to boot |
+| 🧪 **Tester** | Check every key with macOS and Windows legends |
+| 🗂 **Tray and autostart** | Mode, effects, pomodoro and autostart from the tray menu |
+| 🌍 **English and Russian** | The interface and tray menu switch on the fly; the system language is the default |
+| 🔄 **App updates** | New versions from GitHub Releases install in one click and the app restarts itself |
 
-## Обзор
+## Tour
 
-### Дашборд
+### Dashboard
 
-Главный экран — живая схема клавиатуры. Пока идёт анимация, схема показывает её кадры; в остальное время это холст: выберите кисть и цвет, нажмите на клавишу или проведите по нескольким — цвет сразу появится на клавиатуре. Ластик гасит клавиши, пипетка берёт цвет с уже раскрашенной. Под схемой — палитра, заливка всей клавиатуры и шпаргалка по Fn-клавишам подсветки прошивки. Переключатель **Windows / macOS** в углу работает как `Fn`+`M`: прошивка меняет слой и запоминает выбор. Слева — состояние подключения: канал (USB-C или Bluetooth), версия прошивки, режим и что сейчас горит.
+The main screen is a live keyboard map. While an animation runs, it shows its frames; otherwise it's a canvas: pick the brush and a color, click a key or drag across several, and the color shows up on the keyboard right away. The eraser turns keys off, the picker grabs a color from a painted key. Below are the palette, fill-all and a cheat sheet for the firmware Fn lighting keys. The **Windows / macOS** switch works like `Fn`+`M`: the firmware switches the layer and remembers the choice. The sidebar shows the connection: channel (USB-C or Bluetooth), firmware version, mode and what is lit right now.
 
-### Анимации
+### Animations
 
-<img src=".github/assets/screenshots/animations.png" alt="Анимации" width="900">
+<img src=".github/assets/screenshots/en/animations.png" alt="Animations" width="900">
 
-21 анимация, которую считает приложение и отправляет в клавиатуру ~20 раз в секунду: радуга, плазма, северное сияние, океан, огонь, матрица, кометы, звёзды, дождь, спираль и другие. У «своих» эффектов можно повернуть палитру по кругу оттенков и приглушить насыщенность, у остальных — задать один или два цвета. Скорость и яркость меняются на лету, без перезапуска анимации; параметры запоминаются между запусками.
+21 animations computed by the app and sent to the keyboard ~20 times a second: rainbow, plasma, aurora, ocean, fire, matrix, comets, stars, rain, spiral and more. Effects with their own palette can be rotated around the hue wheel and desaturated, the others take one or two colors. Speed and brightness change live without restarting the animation, and the settings are remembered between launches.
 
-На этой же странице:
+On the same page:
 
-- **Визуализатор звука** — спектр того, что играет в системе, столбиками по всей ширине клавиатуры;
-- **Реакция на нажатия** — круги, след, крест или тепловая карта поверх любой подсветки; свой цвет или радуга (каждое нажатие — своим цветом), время затухания.
+- **Audio visualizer** — the spectrum of whatever plays on the system, as bars across the keyboard;
+- **Key reactions** — ripples, trail, cross or heat map on top of any lighting; a single color or a rainbow (a new color for every press), fade time.
 
-### Индикаторы
+### Indicators
 
-<img src=".github/assets/screenshots/indicators.png" alt="Индикаторы" width="900">
+<img src=".github/assets/screenshots/en/indicators.png" alt="Indicators" width="900">
 
-Подсказки, которые рисуются поверх выбранной подсветки:
+Hints drawn on top of the chosen lighting:
 
-- **Раскладка RU/EN** — цвет текущего языка на Esc, Caps, пробеле, F-ряду или всех клавишах; всегда или пару секунд после смены;
-- **Caps Lock** — пока включён, горит сама клавиша, все буквы или вся клавиатура;
-- **Шкала на клавишах 1…0** — громкость или загрузка процессора, постоянно или 2 секунды после изменения;
-- **Вспышка по команде** — клавиатура мигает, когда скрипт, сборка или хук выполнят `rainy75 --flash '#ff0000' --times 3`;
-- **Режим Win/Mac** — после переключения клавиатура на мгновение загорается цветом режима: пульс, вспышки, волна или ровный свет.
+- **Input source RU/EN** — the current language color on Esc, Caps, Space, the F-row or all keys; always or for a couple of seconds after a change;
+- **Caps Lock** — while it's on, the key itself, all letters or the whole keyboard light up;
+- **Meter on keys 1…0** — volume or CPU load, always or for 2 seconds after a change;
+- **Flash on command** — the keyboard blinks when a script, build or hook runs `rainy75 --flash '#ff0000' --times 3`;
+- **Win/Mac mode** — after switching, the keyboard briefly lights up in the mode color: pulse, flashes, wave or steady.
 
-### Помодоро
+### Pomodoro
 
-<img src=".github/assets/screenshots/pomodoro.png" alt="Помодоро" width="900">
+<img src=".github/assets/screenshots/en/pomodoro.png" alt="Pomodoro" width="900">
 
-Таймер работы и отдыха прямо на клавиатуре: шкала на F-ряду или цифрах тает, пока идёт фаза, а на смене фаз клавиатура трижды мигает её цветом. Длительность фаз и цвета настраиваются, управлять таймером можно и из трея.
+A work and break timer right on the keyboard: a bar on the F-row or the number row melts while a phase runs, and the keyboard blinks three times in the phase color when it changes. Phase lengths and colors are configurable, and the timer can be controlled from the tray too.
 
-### Тестер
+### Tester
 
-<img src=".github/assets/screenshots/tester.png" alt="Тестер" width="900">
+<img src=".github/assets/screenshots/en/tester.png" alt="Tester" width="900">
 
-Схема по геометрии из `rainy75.dts` с подписями под текущий режим. Нажатые клавиши подсвечиваются, проверенные остаются отмеченными, рядом — журнал последних нажатий с кодами и счётчик проверенных клавиш.
+A map built from the `rainy75.dts` geometry with legends for the current mode. Pressed keys light up, tested ones stay marked, and next to it are the recent presses with key codes and a tested-keys counter.
 
-### Обновление прошивки
+### Firmware update
 
-<img src=".github/assets/screenshots/firmware.png" alt="Обновление прошивки" width="900">
+<img src=".github/assets/screenshots/en/firmware.png" alt="Firmware update" width="900">
 
-Показывает слоты MCUboot и версию прошивки. Выберите `zmk.signed.bin` — приложение проверит заголовок образа, запишет его во второй слот, пометит для пробного запуска и перезагрузит клавиатуру. Если новая прошивка не запустится, MCUboot вернёт прежнюю. Работает по кабелю и по Bluetooth.
+Shows the MCUboot slots and the firmware version. Choose `zmk.signed.bin` — the app checks the image header, writes it to the second slot, marks it for a test boot and reboots the keyboard. If the new firmware fails to start, MCUboot brings back the previous one. Works over the cable and over Bluetooth.
 
-### Трей
+### Tray
 
-Значок в трее показывает текущий режим (Mac/Win). Из меню можно переключить режим, вернуть эффекты прошивки, управлять помодоро и автозапуском. При входе в систему приложение запускается сразу в трей, без окна.
+The tray icon shows the current mode (Mac/Win). From the menu you can switch the mode, restore firmware effects, control the pomodoro and autostart. At login the app starts straight into the tray, without a window.
 
-## Установка
+### Language and updates
 
-Готовые сборки лежат на странице [Releases](https://github.com/pavel-one/rainy75-zmk-app/releases/latest):
+At the bottom of the sidebar there is an **RU / EN** switch and the version number. On first launch the language follows the system; the choice is saved in the settings and applied to the window and tray menu at once.
 
-| ОС | Файл |
+The app checks [GitHub releases](https://github.com/pavel-one/rainy75-zmk-app/releases) on its own — at launch and every 6 hours, or right away when you click the version number. When a new version is out, a card appears in the sidebar: **Update** downloads the build for your OS, puts it in place of the current one and restarts the app; **What's new** opens the release notes. If the app folder isn't writable, the app suggests downloading the update manually.
+
+## Install
+
+Builds are on the [Releases](https://github.com/pavel-one/rainy75-zmk-app/releases/latest) page:
+
+| OS | File |
 |---|---|
-| macOS (Apple Silicon и Intel) | `rainy75-macos-universal.zip` |
+| macOS (Apple Silicon and Intel) | `rainy75-macos-universal.zip` |
 | Windows x64 | `rainy75-windows-amd64.zip` |
-| Linux x64 | `rainy75-linux-amd64.tar.gz` |
+| Linux x64 | `rainy75-linux-amd64.tar.gz` or `.deb` |
 
-Сборки не подписаны. На macOS после распаковки снимите карантин:
+The builds are not signed. On macOS, remove the quarantine flag after unpacking:
 
 ```bash
 xattr -dr com.apple.quarantine Rainy75.app
 ```
 
-На Linux нужны GTK 4 и WebKitGTK 6.0 (Ubuntu 24.04+, Debian 13+).
+Linux needs GTK 4 and WebKitGTK 6.0 (Ubuntu 24.04+, Debian 13+).
 
 > [!NOTE]
-> Bluetooth, визуализатор звука, реакция на нажатия, раскладка, Caps Lock, CPU и громкость пока работают только на macOS (визуализатор — с 14.2).
-> Подсветка, анимации, помодоро, режим Win/Mac, тестер и обновление прошивки по кабелю — на всех ОС.
+> Bluetooth, the audio visualizer, key reactions, input source, Caps Lock, CPU and volume work on macOS only for now (the visualizer needs 14.2+).
+> Lighting, animations, pomodoro, Win/Mac mode, the tester and firmware updates over the cable work on every OS.
 
-## Прошивка
+## Firmware
 
-Приложение рассчитано на открытую прошивку [rainy75-studio](https://github.com/Code-Wizard-Wilson/rainy75-studio) — порт ZMK на Rainy75 Pro (автор Code-Wizard-Wilson, Apache-2.0).
+The app targets the open-source [rainy75-studio](https://github.com/Code-Wizard-Wilson/rainy75-studio) firmware — a ZMK port for the Rainy75 Pro (by Code-Wizard-Wilson, Apache-2.0).
 
 | | |
 |---|---|
-| Контроллер | Telink TLSR9511 (B91, RISC-V), 1 МБ flash |
-| Раскладки | ISO и ANSI, 83 позиции keymap |
-| Подключение | USB-C и Bluetooth LE, три профиля. Приёмник 2.4 ГГц **не работает** |
-| Режимы | macOS по умолчанию, Windows — слой 2 поверх базового |
-| Обновление | MCUboot с откатом |
+| Controller | Telink TLSR9511 (B91, RISC-V), 1 MB flash |
+| Layouts | ISO and ANSI, 83 keymap positions |
+| Connection | USB-C and Bluetooth LE, three profiles. The 2.4 GHz dongle **does not work** |
+| Modes | macOS by default, Windows as layer 2 on top of the base |
+| Updates | MCUboot with rollback |
 | USB | `Rainy 75 Pro`, VID:PID `1D50:615E` |
 
-С компьютером прошивка общается по **SMP (mcumgr)** через последовательный порт USB CDC ACM или по Bluetooth:
+The firmware talks to the computer over **SMP (mcumgr)** through the USB CDC ACM serial port or over Bluetooth:
 
-- `0` — ОС (перезагрузка), `1` — образы прошивки;
-- `65` (`rgb_mgmt`) — цвета клавиш, заливка, полный кадр из 83 цветов, режим Win/Mac;
-- `64` (`flash_mgmt`) — сырой доступ к flash; приложение его **не трогает**.
+- `0` — OS (reboot), `1` — firmware images;
+- `65` (`rgb_mgmt`) — key colors, fill, a full 83-color frame, Win/Mac mode;
+- `64` (`flash_mgmt`) — raw flash access; the app **never touches** it.
 
-Свой USB-интерфейс (например, raw HID) у B91 не помещается в память эндпоинтов: USB перестаёт определяться, и вернуть клавиатуру можно только программатором. Поэтому всё идёт через уже существующий порт CDC ACM.
+A dedicated USB interface (raw HID, say) doesn't fit into the B91 endpoint memory: USB stops enumerating and only a programmer can bring the keyboard back. That's why everything goes through the existing CDC ACM port.
 
-Порт может занимать только одна программа — перед запуском закройте Rainy75 Studio, `mcumgr` и последовательную консоль. Первая установка ZMK и возврат к заводской прошивке делаются скриптами rainy75-studio.
+Only one program can hold the port — close Rainy75 Studio, `mcumgr` and any serial console first. The first ZMK install and going back to the stock firmware are done with the rainy75-studio scripts.
 
 <details>
-<summary>Клавиши подсветки прошивки</summary>
+<summary>Firmware lighting keys</summary>
 
-Цвета с компьютера не переживают перезагрузку клавиатуры, а любая Fn-клавиша подсветки возвращает эффекты прошивки.
+Colors from the computer don't survive a keyboard reboot, and any Fn lighting key brings back the firmware effects.
 
-| Клавиши | Действие |
+| Keys | Action |
 |---|---|
-| `Fn`+`Enter` | следующий эффект |
-| `Fn`+`⌫` | подсветка вкл/выкл |
-| `Fn`+`#` | оттенок |
-| `Fn`+`↑` / `↓` | яркость |
-| `Fn`+`←` / `→` | скорость |
-| `Fn`+`B` | индикатор заряда |
+| `Fn`+`Enter` | next effect |
+| `Fn`+`⌫` | lighting on/off |
+| `Fn`+`#` | hue |
+| `Fn`+`↑` / `↓` | brightness |
+| `Fn`+`←` / `→` | speed |
+| `Fn`+`B` | battery indicator |
 
 </details>
 
 <details>
-<summary>Разрешения macOS</summary>
+<summary>macOS permissions</summary>
 
-Системные настройки → Конфиденциальность и безопасность:
+System Settings → Privacy & Security:
 
-- **Мониторинг ввода** — реакция на нажатия;
-- **Запись звука системы** — визуализатор;
-- **Bluetooth** — работа без кабеля.
+- **Input Monitoring** — key reactions;
+- **System Audio Recording** — the visualizer;
+- **Bluetooth** — working without a cable.
 
 </details>
 
-## Сборка
+## Build
 
-Нужны Go 1.26+, Node.js 22+ и [Wails v3](https://v3.wails.io).
+You need Go 1.26+, Node.js 22+ and [Wails v3](https://v3.wails.io).
 
 ```bash
 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
 cd app
-wails3 dev      # разработка с hot reload
-wails3 build    # бинарник в app/bin
+wails3 dev      # development with hot reload
+wails3 build    # binary in app/bin
 go test ./internal/... .
 ```
 
-Релиз собирается сам: достаточно запушить тег `vX.Y.Z` — GitHub Actions соберёт приложение под macOS, Windows и Linux и выложит архивы в Releases.
+Releases build themselves: push an annotated `vX.Y.Z` tag and GitHub Actions builds the app for macOS, Windows and Linux, stamps the version and uploads the archives to Releases. The tag annotation becomes the release notes.
 
-## Устройство
+## Structure
 
 ```
 app/
-├── main.go, tray.go          окно, трей, флаги запуска
-├── keyboard_service.go       подключение, режим Win/Mac, батарея, прошивка
-├── lighting_service.go       подсветка, индикаторы, визуализатор, помодоро
+├── main.go, tray.go          window, tray, launch flags
+├── keyboard_service.go       connection, Win/Mac mode, battery, firmware
+├── lighting_service.go       lighting, indicators, visualizer, pomodoro
+├── update_service.go         checking and installing updates
 ├── internal/
-│   ├── smp                   клиент SMP: serial (base64 + CRC16) и Bluetooth, CBOR
-│   ├── ble                   SMP по Bluetooth через CoreBluetooth
-│   ├── device                поиск порта клавиатуры
-│   ├── rainy                 команды прошивки: группа 65, MCUboot
-│   ├── layout                83 позиции, геометрия и подписи клавиш
-│   ├── effects               анимации
-│   ├── lights                компоновщик кадров: база и слои-индикаторы
-│   ├── host                  данные системы: нажатия, раскладка, CPU, звук
-│   ├── indicator             индикация режима Win/Mac
+│   ├── smp                   SMP client: serial (base64 + CRC16) and Bluetooth, CBOR
+│   ├── ble                   SMP over Bluetooth via CoreBluetooth
+│   ├── device                finding the keyboard port
+│   ├── rainy                 firmware commands: group 65, MCUboot
+│   ├── layout                83 positions, key geometry and legends
+│   ├── effects               animations
+│   ├── lights                frame compositor: base and indicator layers
+│   ├── host                  system data: key presses, input source, CPU, audio
+│   ├── indicator             Win/Mac mode indicator
 │   ├── settings              settings.json
+│   ├── i18n                  app string translations (the key is the Russian text)
+│   ├── update                GitHub releases, download and in-place replacement
 │   └── battery, autostart
-└── frontend/                 интерфейс на TypeScript + Vite
-json/                         описания раскладок заводской прошивки (VIA)
+└── frontend/                 TypeScript + Vite UI, dictionary in src/en.ts
+json/                         stock firmware layout descriptions (VIA)
 ```
